@@ -8,7 +8,7 @@ export default function PhotoGallery({ photos }) {
       </div>
     );
   }
-
+  
   return (
     <div style={{ display: "flex", gap: "8px", overflowX: "auto" }}>
       {photos.map((url, i) => (
