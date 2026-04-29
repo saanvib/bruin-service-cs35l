@@ -1,7 +1,39 @@
 import { Router } from 'express'
 const router = Router()
 
-router.get('/',    (req, res) => res.json({ message: 'TODO' }))
-router.get('/:id', (req, res) => res.json({ message: 'TODO' }))
+const listings = new Map([
+  ["1", {
+    id: "1",
+    name: "Guitar Lessons",
+    description: "One-on-one beginner to intermediate guitar lessons.",
+    price: 30,
+    duration: 60,
+    availableDates: ["2026-05-01", "2026-05-03", "2026-05-05"]
+  }],
+  ["2", {
+    id: "2",
+    name: "Math Tutoring",
+    description: "Help with calculus, linear algebra, and statistics.",
+    price: 25,
+    duration: 90,
+    availableDates: ["2026-05-02", "2026-05-04", "2026-05-06"]
+  }],
+  ["3", {
+    id: "3",
+    name: "Resume Review",
+    description: "Personalized feedback on your resume and cover letter.",
+    price: 15,
+    duration: 30,
+    availableDates: ["2026-05-01", "2026-05-02", "2026-05-03"]
+  }]
+])
+
+router.get('/', (req, res) => res.json({ message: 'TODO' }))
+
+router.get('/:id', (req, res) => {
+  const listing = listings.get(req.params.id)
+  if (!listing) return res.status(404).json({ error: 'Listing not found' })
+  res.json(listing)
+})
 
 export default router
