@@ -3,6 +3,39 @@ import { useParams } from 'react-router-dom'
 
 const TIME_SLOTS = ["00:00","01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"]
 
+const UNAVAILABLE_SLOTS_SAMPLE = [
+  { listingId: "1", date: "2026-05-01", time: "10:00" },
+  { listingId: "1", date: "2026-05-03", time: "14:00" },
+]
+
+// Single seam for swapping to a real backend later.
+// To switch to a DB: replace this body with `const res = await fetch(...); return res.json()`.
+async function loadUnavailableSlots(listingId) {
+  return UNAVAILABLE_SLOTS_SAMPLE.filter(s => s.listingId === listingId)
+}
+
+function toMinutes(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number)
+  return h * 60 + m
+}
+
+function overlaps(aStart, aEnd, bStart, bEnd) {
+  return aStart < bEnd && bStart < aEnd
+}
+
+function googleCalendarUrl({ booking, listing }) {
+  const start = new Date(`${booking.date}T${booking.time}:00`)
+  const end = new Date(start.getTime() + listing.duration * 60_000)
+  const fmt = d => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: listing.name,
+    dates: `${fmt(start)}/${fmt(end)}`,
+    details: `Booking #${booking.id} for ${booking.customerName}`,
+  })
+  return `https://calendar.google.com/calendar/render?${params.toString()}`
+}
+
 export default function BookingPage() {
   const { id } = useParams()
 
@@ -19,6 +52,9 @@ export default function BookingPage() {
   const [submitError, setSubmitError] = useState(null)
   const [booking, setBooking] = useState(null)
 
+  const [unavailableSlots, setUnavailableSlots] = useState([])
+  const [sessionBookings, setSessionBookings] = useState([])
+
   useEffect(() => {
     setLoadingListing(true)
     setListingError(null)
@@ -29,6 +65,10 @@ export default function BookingPage() {
       })
       .then(data => { setListing(data); setLoadingListing(false) })
       .catch(err => { setListingError(err.message); setLoadingListing(false) })
+  }, [id])
+
+  useEffect(() => {
+    loadUnavailableSlots(id).then(setUnavailableSlots)
   }, [id])
 
   async function handleSubmit(e) {
@@ -47,6 +87,7 @@ export default function BookingPage() {
       }
       const data = await res.json()
       setBooking(data)
+      setSessionBookings(prev => [...prev, { date: data.date, time: data.time }])
     } catch (err) {
       setSubmitError(err.message)
     } finally {
@@ -68,8 +109,40 @@ export default function BookingPage() {
         <p>Name: {booking.customerName}</p>
         <p>Email: {booking.customerEmail}</p>
         <p>Price: ${listing.price}</p>
+        <a
+          href={googleCalendarUrl({ booking, listing })}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Add to Google Calendar
+        </a>
       </div>
     )
+  }
+
+  const duration = listing.duration
+  const blocked = [...unavailableSlots, ...sessionBookings]
+    .filter(s => s.date === date)
+    .map(s => ({ start: toMinutes(s.time), end: toMinutes(s.time) + duration }))
+
+  const visibleSlots = TIME_SLOTS.filter(t => {
+    const start = toMinutes(t)
+    const end = start + duration
+    return !blocked.some(b => overlaps(start, end, b.start, b.end))
+  })
+
+  function handleDateChange(e) {
+    const newDate = e.target.value
+    setDate(newDate)
+    const blockedForNewDate = [...unavailableSlots, ...sessionBookings]
+      .filter(s => s.date === newDate)
+      .map(s => ({ start: toMinutes(s.time), end: toMinutes(s.time) + duration }))
+    if (time) {
+      const start = toMinutes(time)
+      const end = start + duration
+      const stillValid = !blockedForNewDate.some(b => overlaps(start, end, b.start, b.end))
+      if (!stillValid) setTime('')
+    }
   }
 
   return (
@@ -83,7 +156,7 @@ export default function BookingPage() {
       <form onSubmit={handleSubmit}>
         <div>
           <label>Date</label>
-          <select value={date} onChange={e => setDate(e.target.value)} required>
+          <select value={date} onChange={handleDateChange} required>
             <option value="">Select a date</option>
             {listing.availableDates.map(d => (
               <option key={d} value={d}>{d}</option>
@@ -95,7 +168,7 @@ export default function BookingPage() {
           <label>Time</label>
           <select value={time} onChange={e => setTime(e.target.value)} required>
             <option value="">Select a time</option>
-            {TIME_SLOTS.map(t => (
+            {visibleSlots.map(t => (
               <option key={t} value={t}>{t}</option>
             ))}
           </select>
