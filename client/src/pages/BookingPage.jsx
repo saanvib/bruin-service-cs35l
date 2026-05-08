@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
+import CalendarPicker from './CalendarPicker'
 
 const TIME_SLOTS = ["00:00","01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"]
 
@@ -156,12 +157,10 @@ export default function BookingPage() {
       <form onSubmit={handleSubmit}>
         <div>
           <label>Date</label>
-          <select value={date} onChange={handleDateChange} required>
-            <option value="">Select a date</option>
-            {listing.availableDates.map(d => (
-              <option key={d} value={d}>{d}</option>
-            ))}
-          </select>
+          <CalendarPicker
+            selectedDate={date}
+            onSelectDate={(d) => handleDateChange({ target: { value: d } })}
+          />
         </div>
 
         <div>
