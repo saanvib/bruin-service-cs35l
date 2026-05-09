@@ -41,13 +41,24 @@ const listings = new Map([
 
 router.get('/', (req, res) => {
     try {
-        const { category } = req.query; 
+        const { category, minPrice, maxPrice } = req.query; 
         
         let results = Array.from(listings.values());
 
         if (category) {
           const categoryLower = category.toLowerCase();
           results = results.filter(l => l.category.toLowerCase() === categoryLower);
+        }
+
+        if (minPrice) {
+            
+            const min = parseFloat(minPrice);
+            results = results.filter(l => l.price >= min);
+        }
+
+        if (maxPrice) {
+            const max = parseFloat(maxPrice);
+            results = results.filter(l => l.price <= max);
         }
 
         return res.status(200).json(results);
