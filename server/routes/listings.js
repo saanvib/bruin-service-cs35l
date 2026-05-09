@@ -5,6 +5,7 @@ const listings = new Map([
   ["1", {
     id: "1",
     name: "Guitar Lessons",
+    category: "lessons",
     description: "One-on-one beginner to intermediate guitar lessons.",
     price: 30,
     duration: 60,
@@ -17,6 +18,7 @@ const listings = new Map([
   ["2", {
     id: "2",
     name: "Math Tutoring",
+    category: "tutoring",
     description: "Help with calculus, linear algebra, and statistics.",
     price: 25,
     duration: 90,
@@ -28,6 +30,7 @@ const listings = new Map([
   ["3", {
     id: "3",
     name: "Resume Review",
+    category: "tutoring",
     description: "Personalized feedback on your resume and cover letter.",
     price: 15,
     duration: 30,
@@ -36,13 +39,23 @@ const listings = new Map([
   }]
 ])
 
-router.get('/', (req, res) => res.json(Array.from(listings.values())))
+router.get('/', (req, res) => {
+    try {
+        const { category } = req.query; 
+        
+        let results = Array.from(listings.values());
 
+        if (category) {
+          const categoryLower = category.toLowerCase();
+          results = results.filter(l => l.category.toLowerCase() === categoryLower);
+        }
 
-router.get('/:id', (req, res) => {
-  const listing = listings.get(req.params.id)
-  if (!listing) return res.status(404).json({ error: 'Listing not found' })
-  res.json(listing)
-})
+        return res.status(200).json(results);
+
+    } catch (error) {
+        console.error('Error fetching listings:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 export default router
