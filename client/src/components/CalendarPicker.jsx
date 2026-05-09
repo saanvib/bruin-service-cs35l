@@ -33,7 +33,7 @@ function formatDate(day) {
 }
 
 // Returns the CSS class names for a given day cell
-function getDayClassName(day, today, oneMonthOut, selectedDate) {
+function getDayClassName(day, today, oneMonthOut, selectedDate, fullyBookedDates, unavailableDates) {
   if (!day) return 'calendar-day empty'
 
   const classes = ['calendar-day']
@@ -46,12 +46,16 @@ function getDayClassName(day, today, oneMonthOut, selectedDate) {
     classes.push('today')
   } else if (day > oneMonthOut) {
     classes.push('beyond')
+  } else if (fullyBookedDates.includes(formatDate(day))) {
+    classes.push('fully-booked')
+  } else if (unavailableDates.includes(formatDate(day))) {
+    classes.push('unavailable')
   }
 
   return classes.join(' ')
 }
 
-export default function CalendarPicker({ selectedDate, onSelectDate }) {
+export default function CalendarPicker({ selectedDate, onSelectDate, fullyBookedDates = [], unavailableDates = [] }) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
@@ -87,6 +91,16 @@ export default function CalendarPicker({ selectedDate, onSelectDate }) {
       return
     }
 
+    if (unavailableDates.includes(formatDate(day))) {
+      setOutOfRangeMsg('This day is not available for booking.')
+      return
+    }
+
+    if (fullyBookedDates.includes(formatDate(day))) {
+      setOutOfRangeMsg('There are no available appointments on this day. Please select another date.')
+      return
+    }
+
     setOutOfRangeMsg('')
     onSelectDate(formatDate(day))
   }
@@ -113,7 +127,7 @@ export default function CalendarPicker({ selectedDate, onSelectDate }) {
         {weeks.flat().map((day, i) => (
           <div
             key={i}
-            className={getDayClassName(day, today, oneMonthOut, selectedDate)}
+            className={getDayClassName(day, today, oneMonthOut, selectedDate, fullyBookedDates, unavailableDates)}
             onClick={() => handleDayClick(day)}
           >
             {day ? day.getDate() : ''}
