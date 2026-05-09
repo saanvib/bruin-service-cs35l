@@ -132,6 +132,42 @@ export default function BookingPage() {
     return !blocked.some(b => overlaps(start, end, b.start, b.end))
   })
 
+  // A day is fully booked if every time slot overlaps with a blocked slot
+  function getSlotsForDate(d) {
+    const blockedForDate = [...unavailableSlots, ...sessionBookings]
+      .filter(s => s.date === d)
+      .map(s => ({ start: toMinutes(s.time), end: toMinutes(s.time) + duration }))
+    return TIME_SLOTS.filter(t => {
+      const start = toMinutes(t)
+      const end = start + duration
+      return !blockedForDate.some(b => overlaps(start, end, b.start, b.end))
+    })
+  }
+
+  // A day is fully booked if all its slots are taken
+  const allBlockedDates = [...new Set([...unavailableSlots, ...sessionBookings].map(s => s.date))]
+  const fullyBookedDates = allBlockedDates.filter(d => getSlotsForDate(d).length === 0)
+
+  // Days not offered by the provider at all (not in availableDates)
+  const unavailableDates = (() => {
+    const offered = new Set(listing.availableDates || [])
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const oneMonthOut = new Date(today)
+    oneMonthOut.setMonth(oneMonthOut.getMonth() + 1)
+    const dates = []
+    const cursor = new Date(today)
+    while (cursor <= oneMonthOut) {
+      const yyyy = cursor.getFullYear()
+      const mm = String(cursor.getMonth() + 1).padStart(2, '0')
+      const dd = String(cursor.getDate()).padStart(2, '0')
+      const key = `${yyyy}-${mm}-${dd}`
+      if (!offered.has(key)) dates.push(key)
+      cursor.setDate(cursor.getDate() + 1)
+    }
+    return dates
+  })()
+
   function handleDateChange(e) {
     const newDate = e.target.value
     setDate(newDate)
@@ -160,18 +196,29 @@ export default function BookingPage() {
           <CalendarPicker
             selectedDate={date}
             onSelectDate={(d) => handleDateChange({ target: { value: d } })}
+            fullyBookedDates={fullyBookedDates}
+            unavailableDates={unavailableDates}
           />
         </div>
 
-        <div>
-          <label>Time</label>
-          <select value={time} onChange={e => setTime(e.target.value)} required>
-            <option value="">Select a time</option>
-            {visibleSlots.map(t => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-        </div>
+        {date && (
+          <div>
+            <label>Time</label>
+            <select value={time} onChange={e => setTime(e.target.value)} required>
+              <option value="">Select a time</option>
+              {visibleSlots.map(t => {
+                // Calculate end time by adding listing duration to start time
+                const endMinutes = toMinutes(t) + duration
+                const endHH = String(Math.floor(endMinutes / 60)).padStart(2, '0')
+                const endMM = String(endMinutes % 60).padStart(2, '0')
+                const endTime = `${endHH}:${endMM}`
+                return (
+                  <option key={t} value={t}>{t} - {endTime}</option>
+                )
+              })}
+            </select>
+          </div>
+        )}
 
         <div>
           <label>Your Name</label>
