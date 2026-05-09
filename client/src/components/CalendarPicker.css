@@ -52,6 +52,17 @@
   color: #fff;
 }
 
+.calendar-day.unavailable {
+  color: #9ca3af;
+  cursor: pointer;
+}
+
+.calendar-day.fully-booked {
+  background-color: #fee2e2;
+  color: #991b1b;
+  cursor: pointer;
+}
+
 .calendar-out-of-range-msg {
   color: #b45309;
   margin-top: 8px;
