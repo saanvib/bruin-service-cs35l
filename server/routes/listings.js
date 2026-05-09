@@ -9,6 +9,7 @@ const listings = new Map([
     description: "One-on-one beginner to intermediate guitar lessons.",
     price: 30,
     duration: 60,
+    rating: 4.3,
     availableDates: ["2026-05-01", "2026-05-03", "2026-05-05"],
     reviews: [
       { author: "Alice", rating: 5, text: "Amazing lessons, very patient!" },
@@ -22,6 +23,7 @@ const listings = new Map([
     description: "Help with calculus, linear algebra, and statistics.",
     price: 25,
     duration: 90,
+    rating: 3.9,
     availableDates: ["2026-05-02", "2026-05-04", "2026-05-06"],
     reviews: [
       { author: "Carol", rating: 5, text: "Explained everything so clearly." }
@@ -34,6 +36,7 @@ const listings = new Map([
     description: "Personalized feedback on your resume and cover letter.",
     price: 15,
     duration: 30,
+    rating: 4.6,
     availableDates: ["2026-05-01", "2026-05-02", "2026-05-03"],
     reviews: []
   }]
@@ -41,7 +44,7 @@ const listings = new Map([
 
 router.get('/', (req, res) => {
     try {
-        const { category, minPrice, maxPrice } = req.query; 
+        const { category, minPrice, maxPrice , rating } = req.query; 
         
         let results = Array.from(listings.values());
 
@@ -59,6 +62,11 @@ router.get('/', (req, res) => {
         if (maxPrice) {
             const max = parseFloat(maxPrice);
             results = results.filter(l => l.price <= max);
+        }
+
+        if (rating) {
+          const minRating = parseFloat(rating);
+          results = results.filter(l => l.rating >= minRating);
         }
 
         return res.status(200).json(results);
