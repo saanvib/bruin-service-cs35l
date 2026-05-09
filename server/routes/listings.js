@@ -8,7 +8,7 @@ const listings = new Map([
     description: "One-on-one beginner to intermediate guitar lessons.",
     price: 30,
     duration: 60,
-    availableDates: ["2026-05-01", "2026-05-03", "2026-05-05"],
+    availableDates: ["2026-05-01", "2026-05-03", "2026-05-05", "2026-05-10", "2026-05-15", "2026-05-20"],
     reviews: [
       { author: "Alice", rating: 5, text: "Amazing lessons, very patient!" },
       { author: "Bob", rating: 4, text: "Great teacher, learned a lot." }
