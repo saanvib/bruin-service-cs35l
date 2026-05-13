@@ -1,0 +1,32 @@
+nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #FFF4B0;
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.nav-logo {
+  font-family: 'Alfa Slab One', serif;
+  color: #00050b; /* UCLA Gold */
+  margin: 0;
+  font-size: 2.2rem;
+  letter-spacing: 7px;
+  font-weight: bold;
+}
+
+.nav-links {
+  display: flex;
+  gap: 20px;
+}
+
+.nav-links a {
+  color: #00050b; /* Dark text so it's easy to read on yellow */
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.nav-links a:hover {
+  color: #FFD100; /* Turns gold when you hover over it */
+}

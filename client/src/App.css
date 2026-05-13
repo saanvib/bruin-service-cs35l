@@ -1,0 +1,21 @@
+/* This changes the background for the entire window */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #87d8f3; /* Your Pastel Butter Yellow */
+  font-family: 'Segoe UI', sans-serif;
+  min-height: 100vh;
+}
+
+.main-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  color: white; 
+}
+
+h1 {
+  color: white;
+  text-align: center;
+}
+

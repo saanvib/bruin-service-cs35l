@@ -10,12 +10,15 @@ import DashboardPage from './pages/DashboardPage'
 import BookingPage from './pages/BookingPage'
 import ChatPage from './pages/ChatPage'
 import NotificationsPage from './pages/NotificationsPage'
+import './App.css';
 
 function RootLayout() {
   return (
     <>
       <Navbar />
-      <Outlet />
+      <div className="main-container">
+        <Outlet />
+      </div>
     </>
   )
 }
