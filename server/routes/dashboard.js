@@ -1,121 +1,98 @@
 import { Router } from 'express'
-
-const listings = new Map([
-  ["1", {
-    id: "1",
-    providerId: "provider-1",
-    name: "Guitar Lessons",
-    category: "Music",
-    location: "De Neve Plaza",
-    description: "One-on-one beginner to intermediate guitar lessons.",
-    price: 30,
-    duration: 60,
-    photos: [],
-    services: [
-      { name: "30-min session", price: 20 },
-      { name: "60-min session", price: 30 },
-    ],
-    availableDates: ["2026-05-01", "2026-05-03", "2026-05-05"],
-    reviews: [
-      { author: "Alice", rating: 5, text: "Amazing lessons, very patient!" },
-      { author: "Bob",   rating: 4, text: "Great teacher, learned a lot." }
-    ]
-  }],
-  ["2", {
-    id: "2",
-    providerId: "provider-1",
-    name: "Math Tutoring",
-    category: "Tutoring",
-    location: "Powell Library",
-    description: "Help with calculus, linear algebra, and statistics.",
-    price: 25,
-    duration: 90,
-    photos: [],
-    services: [
-      { name: "60-min session", price: 25 },
-      { name: "90-min session", price: 35 },
-    ],
-    availableDates: ["2026-05-02", "2026-05-04", "2026-05-06"],
-    reviews: [
-      { author: "Carol", rating: 5, text: "Explained everything so clearly." }
-    ]
-  }],
-  ["3", {
-    id: "3",
-    providerId: "provider-2",
-    name: "Resume Review",
-    category: "Career",
-    location: "Sproul Hall",
-    description: "Personalized feedback on your resume and cover letter.",
-    price: 15,
-    duration: 30,
-    photos: [],
-    services: [
-      { name: "Resume only",              price: 15 },
-      { name: "Resume + Cover Letter",    price: 25 },
-    ],
-    availableDates: ["2026-05-01", "2026-05-02", "2026-05-03"],
-    reviews: []
-  }]
-])
-
-export { listings }
+import { sql } from '../db.js'
 
 const router = Router()
 
-
-router.get('/listings', (req, res) => {
+// GET /api/dashboard/listings?providerId=xxx
+router.get('/listings', async (req, res) => {
   const { providerId } = req.query
   if (!providerId) return res.status(400).json({ error: 'providerId required' })
-  const results = Array.from(listings.values()).filter(l => l.providerId === providerId)
-  res.json(results)
+  try {
+    const rows = await sql`
+      SELECT * FROM listings
+      WHERE provider_id = ${providerId}
+      ORDER BY created_at DESC
+    `
+    res.json(rows)
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ error: 'Failed to fetch listings' })
+  }
 })
 
-router.post('/listings', (req, res) => {
+// POST /api/dashboard/listings
+router.post('/listings', async (req, res) => {
   const { providerId, name, category, location, description, price, duration, services } = req.body
   if (!providerId || !name || !category || !location || !description || price == null || !duration) {
     return res.status(400).json({ error: 'Missing required fields' })
   }
-  const id = Date.now().toString()
-  const listing = {
-    id,
-    providerId,
-    name,
-    category,
-    location,
-    description,
-    price: Number(price),
-    duration: Number(duration),
-    photos: [],
-    services: services || [],
-    availableDates: [],
-    reviews: []
+  try {
+    const id = Date.now().toString()
+    const [listing] = await sql`
+      INSERT INTO listings (id, provider_id, name, category, location, description, price, duration, services)
+      VALUES (
+        ${id},
+        ${providerId},
+        ${name},
+        ${category},
+        ${location},
+        ${description},
+        ${Number(price)},
+        ${Number(duration)},
+        ${JSON.stringify(services || [])}::jsonb
+      )
+      RETURNING *
+    `
+    res.status(201).json(listing)
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ error: 'Failed to create listing' })
   }
-  listings.set(id, listing)
-  res.status(201).json(listing)
 })
 
-router.put('/listings/:id', (req, res) => {
-  const listing = listings.get(req.params.id)
-  if (!listing) return res.status(404).json({ error: 'Listing not found' })
+// PUT /api/dashboard/listings/:id
+router.put('/listings/:id', async (req, res) => {
+  const { providerId, name, category, location, description, price, duration, services } = req.body
+  if (!providerId) return res.status(400).json({ error: 'providerId required' })
+  try {
+    const [existing] = await sql`SELECT * FROM listings WHERE id = ${req.params.id}`
+    if (!existing) return res.status(404).json({ error: 'Listing not found' })
+    if (existing.provider_id !== providerId) return res.status(403).json({ error: 'Forbidden' })
 
-  const { providerId } = req.body
-  if (listing.providerId !== providerId) return res.status(403).json({ error: 'Forbidden' })
-
-  const updated = { ...listing, ...req.body, id: listing.id, providerId: listing.providerId }
-  listings.set(listing.id, updated)
-  res.json(updated)
+    const [updated] = await sql`
+      UPDATE listings SET
+        name        = ${name},
+        category    = ${category},
+        location    = ${location},
+        description = ${description},
+        price       = ${Number(price)},
+        duration    = ${Number(duration)},
+        services    = ${JSON.stringify(services || [])}::jsonb
+      WHERE id = ${req.params.id}
+      RETURNING *
+    `
+    res.json(updated)
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ error: 'Failed to update listing' })
+  }
 })
 
-router.delete('/listings/:id', (req, res) => {
-  const listing = listings.get(req.params.id)
-  if (!listing) return res.status(404).json({ error: 'Listing not found' })
-
+// DELETE /api/dashboard/listings/:id
+router.delete('/listings/:id', async (req, res) => {
   const { providerId } = req.query
-  if (listing.providerId !== providerId) return res.status(403).json({ error: 'Forbidden' })
+  if (!providerId) return res.status(400).json({ error: 'providerId required' })
+  try {
+    const [existing] = await sql`SELECT * FROM listings WHERE id = ${req.params.id}`
+    if (!existing) return res.status(404).json({ error: 'Listing not found' })
+    if (existing.provider_id !== providerId) return res.status(403).json({ error: 'Forbidden' })
 
-  listings.delete(req.params.id)
-  res.json({ success: true })
+    await sql`DELETE FROM listings WHERE id = ${req.params.id}`
+    res.json({ success: true })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ error: 'Failed to delete listing' })
+  }
 })
 
 export default router
