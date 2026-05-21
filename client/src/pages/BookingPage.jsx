@@ -53,6 +53,9 @@ export default function BookingPage() {
   const [submitError, setSubmitError] = useState(null)
   const [booking, setBooking] = useState(null)
 
+  const [cancelling, setCancelling] = useState(false)
+  const [cancelError, setCancelError] = useState(null)
+
   const [unavailableSlots, setUnavailableSlots] = useState([])
   const [sessionBookings, setSessionBookings] = useState([])
 
@@ -96,13 +99,34 @@ export default function BookingPage() {
     }
   }
 
+  async function handleCancel() {
+    if (!window.confirm('Cancel this booking?')) return
+    setCancelling(true)
+    setCancelError(null)
+    try {
+      const res = await fetch(`/api/bookings/${booking.id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || 'Cancel failed')
+      }
+      const data = await res.json()
+      setBooking({ ...booking, status: data.status })
+      setSessionBookings(prev => prev.filter(s => !(s.date === booking.date && s.time === booking.time)))
+    } catch (err) {
+      setCancelError(err.message)
+    } finally {
+      setCancelling(false)
+    }
+  }
+
   if (loadingListing) return <p>Loading...</p>
   if (listingError) return <p>Error: {listingError}</p>
 
   if (booking) {
+    const isCancelled = booking.status === 'cancelled'
     return (
       <div>
-        <h1>Booking Confirmed</h1>
+        <h1>{isCancelled ? 'Booking Cancelled' : 'Booking Confirmed'}</h1>
         <p>Booking ID: {booking.id}</p>
         <p>Service: {listing.name}</p>
         <p>Date: {booking.date}</p>
@@ -110,13 +134,23 @@ export default function BookingPage() {
         <p>Name: {booking.customerName}</p>
         <p>Email: {booking.customerEmail}</p>
         <p>Price: ${listing.price}</p>
-        <a
-          href={googleCalendarUrl({ booking, listing })}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Add to Google Calendar
-        </a>
+        {isCancelled ? (
+          <p>Status: Cancelled</p>
+        ) : (
+          <>
+            <a
+              href={googleCalendarUrl({ booking, listing })}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Add to Google Calendar
+            </a>
+            {cancelError && <p>{cancelError}</p>}
+            <button type="button" onClick={handleCancel} disabled={cancelling}>
+              {cancelling ? 'Cancelling...' : 'Cancel Booking'}
+            </button>
+          </>
+        )}
       </div>
     )
   }

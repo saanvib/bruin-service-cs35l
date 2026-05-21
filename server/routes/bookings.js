@@ -19,10 +19,17 @@ const SELECT = `
 
 router.get('/', async (req, res) => {
   try {
-    const { listingId } = req.query
-    const rows = listingId
-      ? await sql.query(`${SELECT} WHERE listing_id = $1 ORDER BY date, time`, [listingId])
-      : await sql.query(`${SELECT} ORDER BY created_at DESC`)
+    const { listingId, includeCancelled } = req.query
+    const filters = []
+    const params = []
+    if (listingId) {
+      params.push(listingId)
+      filters.push(`listing_id = $${params.length}`)
+    }
+    if (includeCancelled !== 'true') filters.push(`status <> 'cancelled'`)
+    const where = filters.length ? ` WHERE ${filters.join(' AND ')}` : ''
+    const order = listingId ? ' ORDER BY date, time' : ' ORDER BY created_at DESC'
+    const rows = await sql.query(`${SELECT}${where}${order}`, params)
     res.json(rows)
   } catch (err) {
     console.error('GET /api/bookings failed:', err)
@@ -75,14 +82,19 @@ router.post('/', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const rows = await sql.query(
-      `DELETE FROM bookings WHERE id = $1 RETURNING id`,
+      `UPDATE bookings
+         SET status = 'cancelled'
+       WHERE id = $1 AND status <> 'cancelled'
+       RETURNING id, status`,
       [req.params.id]
     )
-    if (rows.length === 0) return res.status(404).json({ error: 'Booking not found' })
-    res.status(204).end()
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Booking not found or already cancelled' })
+    }
+    res.status(200).json(rows[0])
   } catch (err) {
     console.error('DELETE /api/bookings/:id failed:', err)
-    res.status(500).json({ error: 'Failed to delete booking' })
+    res.status(500).json({ error: 'Failed to cancel booking' })
   }
 })
 
