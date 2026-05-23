@@ -157,9 +157,8 @@ export default function DashboardPage() {
               <span style={styles.badge}>{l.category}</span>
               <span style={{ color: '#888', fontSize: '0.8rem' }}>{l.location}</span>
             </div>
-            <h2 style={{ margin: '0 0 0.25rem', fontSize: '1.1rem', fontWeight: 600 }}>{l.name}</h2>
-            <p style={{ margin: '0 0 0.5rem', color: '#555', fontSize: '0.9rem' }}>{l.description}</p>
-            <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>${l.price} · {l.duration} min</span>
+            <h2 style={{ margin: '0 0 0.25rem', fontSize: '1.1rem', fontWeight: 600, color: '#111' }}>{l.name}</h2>            <p style={{ margin: '0 0 0.5rem', color: '#555', fontSize: '0.9rem' }}>{l.description}</p>
+            <span style={{ fontSize: '0.9rem', fontWeight: 500, color: '#111' }}>${l.price} · {l.duration} min</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginLeft: '1rem' }}>
             <button onClick={() => openEdit(l)}      style={styles.btnSecondary}>Edit</button>
