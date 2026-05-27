@@ -22,6 +22,7 @@ export default function BrowsePage() {
             <p>{listing.description}</p>
             <p>${listing.price} — {listing.duration} min</p>
             <Link to={`/listings/${listing.id}`}>View Details</Link>
+            <Link to={`/bookings/${listing.id}`} style={{ marginLeft: "8px" }}>Book</Link>
           </div>
         ))
       )}

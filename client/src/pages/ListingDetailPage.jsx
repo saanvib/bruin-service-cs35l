@@ -1,20 +1,23 @@
 import { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
 import PhotoGallery from "../components/PhotoGallery";
 
 export default function ListingDetailPage() {
+  const { id } = useParams();
   const [listing, setListing] = useState(null);
 
   useEffect(() => {
-    fetch("http://localhost:3001/api/listings/1")
+    fetch(`http://localhost:3001/api/listings/${id}`)
       .then((res) => res.json())
       .then((data) => setListing(data));
-  }, []);
+  }, [id]);
 
   if (!listing) return <p>Loading...</p>;
 
   return (
     <div>
       <h1>{listing.name}</h1>
+      <Link to={`/bookings/${id}`}>Book</Link>
       <p><strong>Category:</strong> {listing.category}</p>
       <p><strong>Location:</strong> {listing.location}</p>
       <p>{listing.description}</p>
