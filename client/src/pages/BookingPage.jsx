@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
+import { getSessionToken } from '@descope/react-sdk'
 import CalendarPicker from '../components/CalendarPicker.jsx'
+
+function authHeaders() {
+  return { 'Authorization': `Bearer ${getSessionToken()}` }
+}
 
 const TIME_SLOTS = ["00:00","01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"]
 
@@ -82,7 +87,7 @@ export default function BookingPage() {
     try {
       const res = await fetch('/api/bookings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ listingId: id, date, time, customerName, customerEmail })
       })
       if (!res.ok) {
@@ -104,7 +109,7 @@ export default function BookingPage() {
     setCancelling(true)
     setCancelError(null)
     try {
-      const res = await fetch(`/api/bookings/${booking.id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/bookings/${booking.id}`, { method: 'DELETE', headers: authHeaders() })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
         throw new Error(err.error || 'Cancel failed')

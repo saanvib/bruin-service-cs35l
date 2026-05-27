@@ -1,10 +1,16 @@
 import { useState, useEffect } from 'react'
+import { getSessionToken } from '@descope/react-sdk'
 
 const API = 'http://localhost:3001/api/dashboard'
 
-const MOCK_PROVIDER_ID = 'provider-1'
-
 const CATEGORIES = ['Music', 'Tutoring', 'Career', 'Fitness', 'Art', 'Technology', 'Other']
+
+function authHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${getSessionToken()}`,
+  }
+}
 
 const emptyForm = {
   name: '',
@@ -32,7 +38,7 @@ export default function DashboardPage() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`${API}/listings?providerId=${MOCK_PROVIDER_ID}`)
+      const res = await fetch(`${API}/listings`, { headers: authHeaders() })
       if (!res.ok) throw new Error('Failed to load listings')
       setListings(await res.json())
     } catch (e) {
@@ -81,8 +87,8 @@ export default function DashboardPage() {
     try {
       const res = await fetch(`${API}/listings`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, providerId: MOCK_PROVIDER_ID }),
+        headers: authHeaders(),
+        body: JSON.stringify({ ...form }),
       })
       if (!res.ok) throw new Error('Failed to create listing')
       await fetchListings()
@@ -101,8 +107,8 @@ export default function DashboardPage() {
     try {
       const res = await fetch(`${API}/listings/${editing.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, providerId: MOCK_PROVIDER_ID }),
+        headers: authHeaders(),
+        body: JSON.stringify({ ...form }),
       })
       if (!res.ok) throw new Error('Failed to update listing')
       await fetchListings()
@@ -117,8 +123,9 @@ export default function DashboardPage() {
   // ── delete ─────────────────────────────────────────────────────────────────
   async function handleDelete(id) {
     try {
-      const res = await fetch(`${API}/listings/${id}?providerId=${MOCK_PROVIDER_ID}`, {
+      const res = await fetch(`${API}/listings/${id}`, {
         method: 'DELETE',
+        headers: authHeaders(),
       })
       if (!res.ok) throw new Error('Failed to delete listing')
       setDeleteId(null)

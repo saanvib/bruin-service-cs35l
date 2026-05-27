@@ -9,6 +9,7 @@
     "db:seed": "node --env-file=../.env.development.local scripts/seed.js"
   },
   "dependencies": {
+    "@descope/node-sdk": "^2.6.0",
     "@neondatabase/serverless": "^1.1.0",
     "cors": "^2.8.6",
     "dotenv": "^16.0.0",

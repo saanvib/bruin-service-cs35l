@@ -9,6 +9,7 @@ import dashboardRoutes     from './routes/dashboard.js'
 import bookingsRoutes      from './routes/bookings.js'
 import chatRoutes          from './routes/chat.js'
 import notificationsRoutes from './routes/notifications.js'
+import { requireAuth, requireRole } from './middleware/auth.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -19,8 +20,8 @@ app.use(express.json())
 app.use('/api/auth',          authRoutes)
 app.use('/api/listings',      listingsRoutes)
 app.use('/api/providers',     providersRoutes)
-app.use('/api/dashboard',     dashboardRoutes)
-app.use('/api/bookings',      bookingsRoutes)
+app.use('/api/dashboard',     requireAuth, requireRole('provider'), dashboardRoutes)
+app.use('/api/bookings',      requireAuth, requireRole('customer'), bookingsRoutes)
 app.use('/api/chat',          chatRoutes)
 app.use('/api/notifications', notificationsRoutes)
 
