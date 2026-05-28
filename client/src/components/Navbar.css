@@ -5,11 +5,12 @@ nav {
     background-color: #FFF4B0;
     padding: 1rem 2rem;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-bottom: 2px solid #2774AE;
 }
 
 .nav-logo {
   font-family: 'Alfa Slab One', serif;
-  color: #00050b; /* UCLA Gold */
+  color: #1a3f6f;
   margin: 0;
   font-size: 2.2rem;
   letter-spacing: 7px;
@@ -22,11 +23,11 @@ nav {
 }
 
 .nav-links a {
-  color: #00050b; /* Dark text so it's easy to read on yellow */
+  color: #1a3f6f;
     text-decoration: none;
     font-weight: bold;
 }
 
 .nav-links a:hover {
-  color: #FFD100; /* Turns gold when you hover over it */
+  color: #FFD100;
 }

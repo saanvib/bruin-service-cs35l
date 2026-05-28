@@ -2,8 +2,8 @@
 body {
   margin: 0;
   padding: 0;
-  background-color: #87d8f3; /* Your Pastel Butter Yellow */
-  font-family: 'Segoe UI', sans-serif;
+  background-color: #FFF9D6;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
   min-height: 100vh;
 }
 
@@ -11,11 +11,10 @@ body {
   max-width: 1100px;
   margin: 0 auto;
   padding: 40px 20px;
-  color: white; 
+  color: #111827;
 }
 
 h1 {
-  color: white;
+  color: #1a3f6f;
   text-align: center;
 }
-

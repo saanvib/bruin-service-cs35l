@@ -27,7 +27,7 @@ export default function ListingDetailPage() {
       <h2>Services</h2>
       {listing.services && listing.services.length > 0 ? (
         listing.services.map((service, index) => (
-          <div key={index} style={{ border: "1px solid #ccc", margin: "8px 0", padding: "8px" }}>
+          <div key={index} style={{ border: "1.5px solid #e5c84a", margin: "8px 0", padding: "12px 16px", borderRadius: 10, background: "#fff" }}>
             <strong>{service.name}</strong> — ${service.price}
           </div>
         ))
@@ -40,7 +40,7 @@ export default function ListingDetailPage() {
         <p>No reviews yet.</p>
       ) : (
         listing.reviews.map((review, index) => (
-          <div key={index} style={{ border: "1px solid #ccc", margin: "8px 0", padding: "8px" }}>
+          <div key={index} style={{ border: "1.5px solid #e5c84a", margin: "8px 0", padding: "12px 16px", borderRadius: 10, background: "#fff" }}>
             <strong>{review.author}</strong> — {review.rating}/5
             <p>{review.text}</p>
           </div>
