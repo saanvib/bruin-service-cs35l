@@ -5,7 +5,7 @@ const router = Router()
 
 // GET /api/dashboard/listings
 router.get('/listings', async (req, res) => {
-  const providerId = req.user.userId
+  const providerId = req.user.token.sub
   try {
     const rows = await sql`
       SELECT * FROM listings
@@ -21,7 +21,7 @@ router.get('/listings', async (req, res) => {
 
 // POST /api/dashboard/listings
 router.post('/listings', async (req, res) => {
-  const providerId = req.user.userId
+  const providerId = req.user.token.sub
   const { name, category, location, description, price, duration, services } = req.body
   if (!name || !category || !location || !description || price == null || !duration) {
     return res.status(400).json({ error: 'Missing required fields' })
@@ -52,7 +52,7 @@ router.post('/listings', async (req, res) => {
 
 // PUT /api/dashboard/listings/:id
 router.put('/listings/:id', async (req, res) => {
-  const providerId = req.user.userId
+  const providerId = req.user.token.sub
   const { name, category, location, description, price, duration, services } = req.body
   try {
     const [existing] = await sql`SELECT * FROM listings WHERE id = ${req.params.id}`
@@ -80,7 +80,7 @@ router.put('/listings/:id', async (req, res) => {
 
 // DELETE /api/dashboard/listings/:id
 router.delete('/listings/:id', async (req, res) => {
-  const providerId = req.user.userId
+  const providerId = req.user.token.sub
   try {
     const [existing] = await sql`SELECT * FROM listings WHERE id = ${req.params.id}`
     if (!existing) return res.status(404).json({ error: 'Listing not found' })
