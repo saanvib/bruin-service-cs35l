@@ -246,7 +246,7 @@ export default function DashboardPage() {
 
 const styles = {
   btnPrimary: {
-    background: '#2563eb',
+    background: '#2774AE',
     color: '#fff',
     border: 'none',
     borderRadius: 8,
@@ -279,7 +279,7 @@ const styles = {
     display: 'flex',
     alignItems: 'flex-start',
     background: '#fff',
-    border: '1px solid #e2e8f0',
+    border: '1.5px solid #e5c84a',
     borderRadius: 12,
     padding: '1rem 1.25rem',
     marginBottom: '1rem',
@@ -296,7 +296,7 @@ const styles = {
   empty: {
     textAlign: 'center',
     padding: '3rem',
-    border: '2px dashed #e2e8f0',
+    border: '2px dashed #e5c84a',
     borderRadius: 12,
   },
   overlay: {

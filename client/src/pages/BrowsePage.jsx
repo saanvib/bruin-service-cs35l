@@ -17,7 +17,7 @@ export default function BrowsePage() {
         <p>No listings found.</p>
       ) : (
         listings.map((listing) => (
-          <div key={listing.id} style={{ border: "1px solid #ccc", margin: "8px 0", padding: "8px" }}>
+          <div key={listing.id} style={{ border: "1.5px solid #e5c84a", margin: "8px 0", padding: "12px 16px", borderRadius: 10, background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
             <h2>{listing.name}</h2>
             <p>{listing.description}</p>
             <p>${listing.price} — {listing.duration} min</p>
