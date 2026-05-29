@@ -51,9 +51,9 @@ router.post('/listings', async (req, res) => {
 })
 
 // PUT /api/dashboard/listings/:id
-router.put('/listings/:id', async (req, res) => {
+router.put('/listings/:id', async (req, res) => { 
   const providerId = req.user.token.sub
-  const { name, category, location, description, price, duration, services } = req.body
+  const { name, category, location, description, price, duration, services, availableDates } = req.body
   try {
     const [existing] = await sql`SELECT * FROM listings WHERE id = ${req.params.id}`
     if (!existing) return res.status(404).json({ error: 'Listing not found' })
@@ -61,17 +61,19 @@ router.put('/listings/:id', async (req, res) => {
 
     const [updated] = await sql`
       UPDATE listings SET
-        name        = ${name},
-        category    = ${category},
-        location    = ${location},
-        description = ${description},
-        price       = ${Number(price)},
-        duration    = ${Number(duration)},
-        services    = ${JSON.stringify(services || [])}::jsonb
+        name            = ${name},
+        category        = ${category},
+        location        = ${location},
+        description     = ${description},
+        price           = ${Number(price)},
+        duration        = ${Number(duration)},
+        services        = ${JSON.stringify(services || [])}::jsonb,
+        available_dates = ${JSON.stringify(availableDates || [])}::jsonb
       WHERE id = ${req.params.id}
       RETURNING *
     `
-    res.json(updated)
+ 
+ res.json(updated)
   } catch (e) {
     console.error(e)
     res.status(500).json({ error: 'Failed to update listing' })
