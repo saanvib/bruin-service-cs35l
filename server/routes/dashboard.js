@@ -53,7 +53,7 @@ router.post('/listings', async (req, res) => {
 // PUT /api/dashboard/listings/:id
 router.put('/listings/:id', async (req, res) => { 
   const providerId = req.user.token.sub
-  const { name, category, location, description, price, duration, services, availableDates } = req.body
+  const { name, category, location, description, price, duration, services, availableDates, photos } = req.body
   try {
     const [existing] = await sql`SELECT * FROM listings WHERE id = ${req.params.id}`
     if (!existing) return res.status(404).json({ error: 'Listing not found' })
@@ -68,7 +68,8 @@ router.put('/listings/:id', async (req, res) => {
         price           = ${Number(price)},
         duration        = ${Number(duration)},
         services        = ${JSON.stringify(services || [])}::jsonb,
-        available_dates = ${JSON.stringify(availableDates || [])}::jsonb
+        available_dates = ${JSON.stringify(availableDates || [])}::jsonb,
+        photos = ${JSON.stringify(photos || [])}::jsonb
       WHERE id = ${req.params.id}
       RETURNING *
     `

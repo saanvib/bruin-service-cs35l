@@ -20,6 +20,7 @@ const emptyForm = {
   price: '',
   duration: '',
   availableDates: [],
+  photos: [],
 }
 
 export default function DashboardPage() {
@@ -95,6 +96,7 @@ export default function DashboardPage() {
       price:       listing.price,
       duration:    listing.duration,
       availableDates: listing.available_dates || [],
+      photos: listing.photos || [],
     })
     setEditing(listing)
     setModal('edit')
@@ -336,6 +338,63 @@ export default function DashboardPage() {
                   {(form.availableDates || []).length === 0 && (
                     <span style={{ color: '#9ca3af', fontSize: '0.85rem' }}>No slots added yet</span>
                   )}
+                </div>
+              </label>
+
+              <label style={styles.label}>Photos
+                <div
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={e => {
+                    e.preventDefault()
+                    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'))
+                    files.forEach(file => {
+                      const reader = new FileReader()
+                      reader.onload = ev => {
+                        setForm(f => ({ ...f, photos: [...(f.photos || []), ev.target.result] }))
+                      }
+                      reader.readAsDataURL(file)
+                    })
+                  }}
+                  style={{
+                    border: '2px dashed #d1d5db', borderRadius: 8, padding: '1.5rem',
+                    textAlign: 'center', color: '#9ca3af', cursor: 'pointer', background: '#fafafa'
+                  }}
+                >
+                  <p style={{ margin: 0 }}>Drag & drop images here</p>
+                  <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem' }}>or</p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    style={{ marginTop: '0.5rem' }}
+                    onChange={e => {
+                      Array.from(e.target.files).forEach(file => {
+                        const reader = new FileReader()
+                        reader.onload = ev => {
+                          setForm(f => ({ ...f, photos: [...(f.photos || []), ev.target.result] }))
+                        }
+                        reader.readAsDataURL(file)
+                      })
+                      e.target.value = ''
+                    }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  {(form.photos || []).map((src, i) => (
+                    <div key={i} style={{ position: 'relative' }}>
+                      <img src={src} alt="" style={{ height: 80, width: 80, objectFit: 'cover', borderRadius: 6 }} />
+                      <button
+                        type="button"
+                        onClick={() => setForm(f => ({ ...f, photos: f.photos.filter((_, j) => j !== i) }))}
+                        style={{
+                          position: 'absolute', top: -6, right: -6,
+                          background: '#b91c1c', color: '#fff', border: 'none',
+                          borderRadius: '50%', width: 20, height: 20, cursor: 'pointer',
+                          fontSize: '0.75rem', fontWeight: 700, lineHeight: '20px', padding: 0
+                        }}
+                      >×</button>
+                    </div>
+                  ))}
                 </div>
               </label>
 
