@@ -5,14 +5,22 @@ import PhotoGallery from "../components/PhotoGallery";
 export default function ListingDetailPage() {
   const { id } = useParams();
   const [listing, setListing] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetch(`http://localhost:3001/api/listings/${id}`)
-      .then((res) => res.json())
-      .then((data) => setListing(data));
+      .then((res) => {
+        if (!res.ok) throw new Error("Listing not found");
+        return res.json();
+      })
+      .then((data) => setListing(data))
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
   }, [id]);
 
-  if (!listing) return <p>Loading...</p>;
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p style={{ color: "#c0392b" }}>⚠ {error} — please try refreshing the page.</p>;
 
   return (
     <div>

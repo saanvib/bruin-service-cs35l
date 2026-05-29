@@ -37,13 +37,26 @@ function Description({ text }) {
 
 export default function BrowsePage() {
   const [listings, setListings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
   const [showTop, setShowTop] = useState(false);
 
   useEffect(() => {
     fetch("http://localhost:3001/api/listings")
-      .then((res) => res.json())
-      .then((data) => setListings(data));
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load listings");
+        return res.json();
+      })
+      .then((data) => setListings(data))
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => setShowTop(window.scrollY > 300);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   useEffect(() => {
