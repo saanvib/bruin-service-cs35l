@@ -1,11 +1,38 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
+const DESCRIPTION_LIMIT = 100;
+
 function isNew(listing) {
   const id = Number(listing.id);
-  if (isNaN(id) || id < 1000000000000) return false; // not a timestamp ID
+  if (isNaN(id) || id < 1000000000000) return false;
   const now = Date.now();
   return (now - id) < 24 * 60 * 60 * 1000;
+}
+
+function Description({ text }) {
+  const [expanded, setExpanded] = useState(false);
+  if (!text || text.length <= DESCRIPTION_LIMIT) return <p>{text}</p>;
+  return (
+    <p>
+      {expanded ? text : text.slice(0, DESCRIPTION_LIMIT) + "..."}
+      <button
+        onClick={() => setExpanded(!expanded)}
+        style={{
+          marginLeft: 6,
+          background: "none",
+          border: "none",
+          color: "#2774AE",
+          cursor: "pointer",
+          fontWeight: 600,
+          fontSize: "0.9rem",
+          padding: 0,
+        }}
+      >
+        {expanded ? "Show less" : "Show more"}
+      </button>
+    </p>
+  );
 }
 
 export default function BrowsePage() {
@@ -96,7 +123,7 @@ export default function BrowsePage() {
               }}>NEW</span>
             )}
             <h2>{listing.name}</h2>
-            <p>{listing.description}</p>
+            <Description text={listing.description} />
             <p>${listing.price} — {listing.duration} min</p>
             <Link to={`/listings/${listing.id}`}>View Details</Link>
             <Link to={`/bookings/${listing.id}`} style={{ marginLeft: "8px" }}>Book</Link>
