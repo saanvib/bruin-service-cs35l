@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
+function isNew(listing) {
+  const id = Number(listing.id);
+  if (isNaN(id) || id < 1000000000000) return false; // not a timestamp ID
+  const now = Date.now();
+  return (now - id) < 24 * 60 * 60 * 1000;
+}
+
 export default function BrowsePage() {
   const [listings, setListings] = useState([]);
   const [search, setSearch] = useState("");
@@ -29,6 +36,17 @@ export default function BrowsePage() {
 
   return (
     <div>
+      <style>{`
+        @keyframes glow {
+          0%, 100% { box-shadow: 0 0 6px 2px rgba(229, 200, 74, 0.6); }
+          50% { box-shadow: 0 0 18px 6px rgba(229, 200, 74, 1); }
+        }
+        .new-listing {
+          animation: glow 1.8s ease-in-out infinite;
+          border: 2px solid #e5c84a !important;
+        }
+      `}</style>
+
       <h1>Browse Services</h1>
 
       <input
@@ -51,7 +69,32 @@ export default function BrowsePage() {
         <p>No listings found.</p>
       ) : (
         filtered.map((listing) => (
-          <div key={listing.id} style={{ border: "1.5px solid #e5c84a", margin: "8px 0", padding: "12px 16px", borderRadius: 10, background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+          <div
+            key={listing.id}
+            className={isNew(listing) ? "new-listing" : ""}
+            style={{
+              border: "1.5px solid #e5c84a",
+              margin: "8px 0",
+              padding: "12px 16px",
+              borderRadius: 10,
+              background: "#fff",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+              position: "relative",
+            }}
+          >
+            {isNew(listing) && (
+              <span style={{
+                position: "absolute",
+                top: 10,
+                right: 12,
+                background: "#e5c84a",
+                color: "#1a1a1a",
+                fontSize: "0.7rem",
+                fontWeight: 700,
+                padding: "2px 8px",
+                borderRadius: 99,
+              }}>NEW</span>
+            )}
             <h2>{listing.name}</h2>
             <p>{listing.description}</p>
             <p>${listing.price} — {listing.duration} min</p>
