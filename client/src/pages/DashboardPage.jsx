@@ -19,6 +19,7 @@ const emptyForm = {
   description: '',
   price: '',
   duration: '',
+  availableDates: [],
 }
 
 export default function DashboardPage() {
@@ -32,6 +33,10 @@ export default function DashboardPage() {
   const [form, setForm]           = useState(emptyForm)
   const [saving, setSaving]       = useState(false)
   const [deleteId, setDeleteId]   = useState(null)   // listing pending delete confirmation
+  const [bookings, setBookings]         = useState([])
+  const [bookingsLoading, setBookingsLoading] = useState(true)
+  const [bookingsError, setBookingsError]     = useState(null)
+  const [bookingAction, setBookingAction]     = useState(null)
 
   // ── fetch ──────────────────────────────────────────────────────────────────
   async function fetchListings() {
@@ -50,6 +55,30 @@ export default function DashboardPage() {
 
   useEffect(() => { fetchListings() }, [])
 
+  async function fetchBookings() {
+    setBookingsLoading(true)
+    setBookingsError(null)
+    try {
+      const res = await fetch(`${API}/listings`, { headers: authHeaders() })
+      if (!res.ok) throw new Error('Failed to load listings')
+      const myListings = await res.json()
+      const all = await Promise.all(
+        myListings.map(l =>
+          fetch(`/api/bookings?listingId=${l.id}&includeCancelled=true`, { headers: authHeaders() })
+            .then(r => r.json())
+            .then(rows => rows.map(b => ({ ...b, listingName: l.name })))
+        )
+      )
+      setBookings(all.flat().sort((a, b) => new Date(a.date) - new Date(b.date)))
+    } catch (e) {
+      setBookingsError(e.message)
+    } finally {
+      setBookingsLoading(false)
+    }
+  }
+
+  useEffect(() => { fetchBookings() }, [])
+
   // ── modal helpers ──────────────────────────────────────────────────────────
   function openCreate() {
     setForm(emptyForm)
@@ -65,6 +94,7 @@ export default function DashboardPage() {
       description: listing.description,
       price:       listing.price,
       duration:    listing.duration,
+      availableDates: listing.available_dates || [],
     })
     setEditing(listing)
     setModal('edit')
@@ -132,6 +162,46 @@ export default function DashboardPage() {
       await fetchListings()
     } catch (e) {
       alert(e.message)
+    }
+  }
+
+  async function handleProviderCancel(bookingId) {
+    if (!window.confirm('Cancel this booking?')) return
+    setBookingAction(bookingId)
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}/cancel-provider`, {
+        method: 'PATCH',
+        headers: authHeaders(),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || 'Failed to cancel')
+      }
+      await fetchBookings()
+    } catch (e) {
+      alert(e.message)
+    } finally {
+      setBookingAction(null)
+    }
+  }
+
+  async function handleReopen(bookingId) {
+    if (!window.confirm('Reopen this booking slot?')) return
+    setBookingAction(bookingId)
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}/reopen`, {
+        method: 'PATCH',
+        headers: authHeaders(),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || 'Failed to reopen')
+      }
+      await fetchBookings()
+    } catch (e) {
+      alert(e.message)
+    } finally {
+      setBookingAction(null)
     }
   }
 
@@ -216,6 +286,59 @@ export default function DashboardPage() {
                 </label>
               </div>
 
+              <label style={styles.label}>Available Date &amp; Time Slots
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  <input
+                    type="date"
+                    min={new Date().toISOString().split('T')[0]}
+                    id="slotDate"
+                    style={{ ...styles.input, flex: 1 }}
+                  />
+                  <input
+                    type="time"
+                    id="slotTime"
+                    style={{ ...styles.input, flex: 1 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const d = document.getElementById('slotDate').value
+                      const t = document.getElementById('slotTime').value
+                      if (!d || !t) return
+                      const slot = `${d}T${t}`
+                      setForm(f => ({
+                        ...f,
+                        availableDates: f.availableDates.includes(slot)
+                          ? f.availableDates
+                          : [...f.availableDates, slot].sort()
+                      }))
+                      document.getElementById('slotDate').value = ''
+                      document.getElementById('slotTime').value = ''
+                    }}
+                    style={styles.btnPrimary}
+                  >Add</button>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.5rem' }}>
+                  {(form.availableDates || []).map(slot => (
+                    <span key={slot} style={{
+                      background: '#eff6ff', color: '#1d4ed8', borderRadius: 6,
+                      padding: '0.2rem 0.5rem', fontSize: '0.8rem',
+                      display: 'flex', alignItems: 'center', gap: '0.3rem',
+                    }}>
+                      {slot.replace('T', ' ')}
+                      <button
+                        type="button"
+                        onClick={() => setForm(f => ({ ...f, availableDates: f.availableDates.filter(x => x !== slot) }))}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1d4ed8', fontWeight: 700, padding: 0 }}
+                      >×</button>
+                    </span>
+                  ))}
+                  {(form.availableDates || []).length === 0 && (
+                    <span style={{ color: '#9ca3af', fontSize: '0.85rem' }}>No slots added yet</span>
+                  )}
+                </div>
+              </label>
+
               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', justifyContent: 'flex-end' }}>
                 <button type="button" onClick={closeModal} style={styles.btnSecondary}>Cancel</button>
                 <button type="submit" disabled={saving} style={styles.btnPrimary}>
@@ -240,6 +363,49 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+      <div style={{ marginTop: '2.5rem' }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1.5rem' }}>My bookings</h1>
+        {bookingsLoading && <p style={{ color: '#888' }}>Loading bookings…</p>}
+        {bookingsError   && <p style={{ color: '#c0392b' }}>{bookingsError}</p>}
+        {!bookingsLoading && !bookingsError && bookings.length === 0 && (
+          <div style={styles.empty}>
+            <p style={{ margin: 0, color: '#888' }}>No bookings yet.</p>
+          </div>
+        )}
+        {!bookingsLoading && bookings.map(b => (
+          <div key={b.id} style={{
+            ...styles.card,
+            borderColor: b.status === 'cancelled' ? '#e5e7eb' : '#e5c84a',
+            opacity: b.status === 'cancelled' ? 0.7 : 1,
+          }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                <span style={{
+                  ...styles.badge,
+                  background: b.status === 'cancelled' ? '#f1f5f9' : '#eff6ff',
+                  color: b.status === 'cancelled' ? '#6b7280' : '#1d4ed8',
+                }}>{b.status}</span>
+                <span style={{ color: '#888', fontSize: '0.8rem' }}>{b.listingName}</span>
+              </div>
+              <p style={{ margin: '0 0 0.25rem', fontWeight: 600, color: '#111' }}>{b.customerName}</p>
+              <p style={{ margin: '0 0 0.25rem', color: '#555', fontSize: '0.9rem' }}>{b.date} at {b.time}</p>
+              <p style={{ margin: 0, color: '#888', fontSize: '0.85rem' }}>{b.customerEmail}</p>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginLeft: '1rem' }}>
+              {b.status !== 'cancelled' ? (
+                <button onClick={() => handleProviderCancel(b.id)} disabled={bookingAction === b.id} style={styles.btnDanger}>
+                  {bookingAction === b.id ? 'Cancelling…' : 'Cancel'}
+                </button>
+              ) : (
+                <button onClick={() => handleReopen(b.id)} disabled={bookingAction === b.id} style={styles.btnSecondary}>
+                  {bookingAction === b.id ? 'Reopening…' : 'Reopen slot'}
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
     </div>
   )
 }
