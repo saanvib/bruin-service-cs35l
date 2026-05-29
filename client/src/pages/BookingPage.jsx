@@ -165,7 +165,14 @@ export default function BookingPage() {
     .filter(s => s.date === date)
     .map(s => ({ start: toMinutes(s.time), end: toMinutes(s.time) + duration }))
 
-  const visibleSlots = TIME_SLOTS.filter(t => {
+  // Use only the provider's offered times for the selected date (fall back to all slots if legacy)
+  const offeredTimesForDate = date
+    ? (providerSlotsByDate[date] && providerSlotsByDate[date].length > 0
+        ? providerSlotsByDate[date]
+        : TIME_SLOTS)
+    : []
+
+  const visibleSlots = offeredTimesForDate.filter(t => {
     const start = toMinutes(t)
     const end = start + duration
     return !blocked.some(b => overlaps(start, end, b.start, b.end))
@@ -187,9 +194,21 @@ export default function BookingPage() {
   const allBlockedDates = [...new Set([...unavailableSlots, ...sessionBookings].map(s => s.date))]
   const fullyBookedDates = allBlockedDates.filter(d => getSlotsForDate(d).length === 0)
 
-  // Days not offered by the provider at all (not in availableDates)
+  // Build a map of date -> [times] from provider's availableDates (now stored as "YYYY-MM-DDTHH:mm")
+  const providerSlotsByDate = (listing.availableDates || []).reduce((acc, slot) => {
+    if (slot.includes('T')) {
+      const [d, t] = slot.split('T')
+      if (!acc[d]) acc[d] = []
+      acc[d].push(t)
+    } else {
+      // legacy date-only format — treat as full day
+      if (!acc[slot]) acc[slot] = []
+    }
+    return acc
+  }, {})
+
+  // Days not offered by the provider at all
   const unavailableDates = (() => {
-    const offered = new Set(listing.availableDates || [])
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const oneMonthOut = new Date(today)
@@ -201,7 +220,7 @@ export default function BookingPage() {
       const mm = String(cursor.getMonth() + 1).padStart(2, '0')
       const dd = String(cursor.getDate()).padStart(2, '0')
       const key = `${yyyy}-${mm}-${dd}`
-      if (!offered.has(key)) dates.push(key)
+      if (!providerSlotsByDate[key]) dates.push(key)
       cursor.setDate(cursor.getDate() + 1)
     }
     return dates
