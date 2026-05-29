@@ -10,6 +10,7 @@ import bookingsRoutes      from './routes/bookings.js'
 import chatRoutes          from './routes/chat.js'
 import notificationsRoutes from './routes/notifications.js'
 import { requireAuth, requireRole } from './middleware/auth.js'
+import reviewsRoutes from './routes/reviews.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -24,6 +25,7 @@ app.use('/api/dashboard',     requireAuth, requireRole('provider'), dashboardRou
 app.use('/api/bookings',      requireAuth, requireRole('customer'), bookingsRoutes)
 app.use('/api/chat',          chatRoutes)
 app.use('/api/notifications', notificationsRoutes)
+app.use('/api/listings',      reviewsRoutes)
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`)
