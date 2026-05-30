@@ -1,0 +1,69 @@
+.calendar-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.calendar-header h3 {
+  margin: 0;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calendar-day-label {
+  text-align: center;
+  font-weight: bold;
+  font-size: 12px;
+  padding: 4px;
+}
+
+.calendar-day {
+  padding: 8px;
+  border-radius: 4px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.calendar-day.empty {
+  visibility: hidden;
+}
+
+.calendar-day.past {
+  color: #ccc;
+  cursor: default;
+}
+
+.calendar-day.today {
+  background-color: #dbeafe;
+  font-weight: bold;
+}
+
+.calendar-day.beyond {
+  color: #94a3b8;
+}
+
+.calendar-day.selected {
+  background-color: #2563eb;
+  color: #fff;
+}
+
+.calendar-day.unavailable {
+  color: #9ca3af;
+  cursor: pointer;
+}
+
+.calendar-day.fully-booked {
+  background-color: #fee2e2;
+  color: #991b1b;
+  cursor: pointer;
+}
+
+.calendar-out-of-range-msg {
+  color: #b45309;
+  margin-top: 8px;
+}
