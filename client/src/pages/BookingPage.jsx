@@ -1,7 +1,46 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
+import { getSessionToken } from '@descope/react-sdk'
+import CalendarPicker from '../components/CalendarPicker.jsx'
+
+function authHeaders() {
+  return { 'Authorization': `Bearer ${getSessionToken()}` }
+}
 
 const TIME_SLOTS = ["00:00","01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"]
+
+const UNAVAILABLE_SLOTS_SAMPLE = [
+  { listingId: "1", date: "2026-05-01", time: "10:00" },
+  { listingId: "1", date: "2026-05-03", time: "14:00" },
+]
+
+// Single seam for swapping to a real backend later.
+// To switch to a DB: replace this body with `const res = await fetch(...); return res.json()`.
+async function loadUnavailableSlots(listingId) {
+  return UNAVAILABLE_SLOTS_SAMPLE.filter(s => s.listingId === listingId)
+}
+
+function toMinutes(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number)
+  return h * 60 + m
+}
+
+function overlaps(aStart, aEnd, bStart, bEnd) {
+  return aStart < bEnd && bStart < aEnd
+}
+
+function googleCalendarUrl({ booking, listing }) {
+  const start = new Date(`${booking.date}T${booking.time}:00`)
+  const end = new Date(start.getTime() + listing.duration * 60_000)
+  const fmt = d => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: listing.name,
+    dates: `${fmt(start)}/${fmt(end)}`,
+    details: `Booking #${booking.id} for ${booking.customerName}`,
+  })
+  return `https://calendar.google.com/calendar/render?${params.toString()}`
+}
 
 export default function BookingPage() {
   const { id } = useParams()
@@ -19,6 +58,12 @@ export default function BookingPage() {
   const [submitError, setSubmitError] = useState(null)
   const [booking, setBooking] = useState(null)
 
+  const [cancelling, setCancelling] = useState(false)
+  const [cancelError, setCancelError] = useState(null)
+
+  const [unavailableSlots, setUnavailableSlots] = useState([])
+  const [sessionBookings, setSessionBookings] = useState([])
+
   useEffect(() => {
     setLoadingListing(true)
     setListingError(null)
@@ -31,6 +76,10 @@ export default function BookingPage() {
       .catch(err => { setListingError(err.message); setLoadingListing(false) })
   }, [id])
 
+  useEffect(() => {
+    loadUnavailableSlots(id).then(setUnavailableSlots)
+  }, [id])
+
   async function handleSubmit(e) {
     e.preventDefault()
     setSubmitting(true)
@@ -38,7 +87,7 @@ export default function BookingPage() {
     try {
       const res = await fetch('/api/bookings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ listingId: id, date, time, customerName, customerEmail })
       })
       if (!res.ok) {
@@ -47,6 +96,7 @@ export default function BookingPage() {
       }
       const data = await res.json()
       setBooking(data)
+      setSessionBookings(prev => [...prev, { date: data.date, time: data.time }])
     } catch (err) {
       setSubmitError(err.message)
     } finally {
@@ -54,13 +104,34 @@ export default function BookingPage() {
     }
   }
 
+  async function handleCancel() {
+    if (!window.confirm('Cancel this booking?')) return
+    setCancelling(true)
+    setCancelError(null)
+    try {
+      const res = await fetch(`/api/bookings/${booking.id}`, { method: 'DELETE', headers: authHeaders() })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || 'Cancel failed')
+      }
+      const data = await res.json()
+      setBooking({ ...booking, status: data.status })
+      setSessionBookings(prev => prev.filter(s => !(s.date === booking.date && s.time === booking.time)))
+    } catch (err) {
+      setCancelError(err.message)
+    } finally {
+      setCancelling(false)
+    }
+  }
+
   if (loadingListing) return <p>Loading...</p>
   if (listingError) return <p>Error: {listingError}</p>
 
   if (booking) {
+    const isCancelled = booking.status === 'cancelled'
     return (
       <div>
-        <h1>Booking Confirmed</h1>
+        <h1>{isCancelled ? 'Booking Cancelled' : 'Booking Confirmed'}</h1>
         <p>Booking ID: {booking.id}</p>
         <p>Service: {listing.name}</p>
         <p>Date: {booking.date}</p>
@@ -68,8 +139,105 @@ export default function BookingPage() {
         <p>Name: {booking.customerName}</p>
         <p>Email: {booking.customerEmail}</p>
         <p>Price: ${listing.price}</p>
+        {isCancelled ? (
+          <p>Status: Cancelled</p>
+        ) : (
+          <>
+            <a
+              href={googleCalendarUrl({ booking, listing })}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Add to Google Calendar
+            </a>
+            {cancelError && <p>{cancelError}</p>}
+            <button type="button" onClick={handleCancel} disabled={cancelling}>
+              {cancelling ? 'Cancelling...' : 'Cancel Booking'}
+            </button>
+          </>
+        )}
       </div>
     )
+  }
+
+  const duration = listing.duration
+  const blocked = [...unavailableSlots, ...sessionBookings]
+    .filter(s => s.date === date)
+    .map(s => ({ start: toMinutes(s.time), end: toMinutes(s.time) + duration }))
+
+  // Use only the provider's offered times for the selected date (fall back to all slots if legacy)
+  const offeredTimesForDate = date
+    ? (providerSlotsByDate[date] && providerSlotsByDate[date].length > 0
+        ? providerSlotsByDate[date]
+        : TIME_SLOTS)
+    : []
+
+  const visibleSlots = offeredTimesForDate.filter(t => {
+    const start = toMinutes(t)
+    const end = start + duration
+    return !blocked.some(b => overlaps(start, end, b.start, b.end))
+  })
+
+  // A day is fully booked if every time slot overlaps with a blocked slot
+  function getSlotsForDate(d) {
+    const blockedForDate = [...unavailableSlots, ...sessionBookings]
+      .filter(s => s.date === d)
+      .map(s => ({ start: toMinutes(s.time), end: toMinutes(s.time) + duration }))
+    return TIME_SLOTS.filter(t => {
+      const start = toMinutes(t)
+      const end = start + duration
+      return !blockedForDate.some(b => overlaps(start, end, b.start, b.end))
+    })
+  }
+
+  // A day is fully booked if all its slots are taken
+  const allBlockedDates = [...new Set([...unavailableSlots, ...sessionBookings].map(s => s.date))]
+  const fullyBookedDates = allBlockedDates.filter(d => getSlotsForDate(d).length === 0)
+
+  // Build a map of date -> [times] from provider's availableDates (now stored as "YYYY-MM-DDTHH:mm")
+  const providerSlotsByDate = (listing.availableDates || []).reduce((acc, slot) => {
+    if (slot.includes('T')) {
+      const [d, t] = slot.split('T')
+      if (!acc[d]) acc[d] = []
+      acc[d].push(t)
+    } else {
+      // legacy date-only format — treat as full day
+      if (!acc[slot]) acc[slot] = []
+    }
+    return acc
+  }, {})
+
+  // Days not offered by the provider at all
+  const unavailableDates = (() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const oneMonthOut = new Date(today)
+    oneMonthOut.setMonth(oneMonthOut.getMonth() + 1)
+    const dates = []
+    const cursor = new Date(today)
+    while (cursor <= oneMonthOut) {
+      const yyyy = cursor.getFullYear()
+      const mm = String(cursor.getMonth() + 1).padStart(2, '0')
+      const dd = String(cursor.getDate()).padStart(2, '0')
+      const key = `${yyyy}-${mm}-${dd}`
+      if (!providerSlotsByDate[key]) dates.push(key)
+      cursor.setDate(cursor.getDate() + 1)
+    }
+    return dates
+  })()
+
+  function handleDateChange(e) {
+    const newDate = e.target.value
+    setDate(newDate)
+    const blockedForNewDate = [...unavailableSlots, ...sessionBookings]
+      .filter(s => s.date === newDate)
+      .map(s => ({ start: toMinutes(s.time), end: toMinutes(s.time) + duration }))
+    if (time) {
+      const start = toMinutes(time)
+      const end = start + duration
+      const stillValid = !blockedForNewDate.some(b => overlaps(start, end, b.start, b.end))
+      if (!stillValid) setTime('')
+    }
   }
 
   return (
@@ -83,23 +251,32 @@ export default function BookingPage() {
       <form onSubmit={handleSubmit}>
         <div>
           <label>Date</label>
-          <select value={date} onChange={e => setDate(e.target.value)} required>
-            <option value="">Select a date</option>
-            {listing.availableDates.map(d => (
-              <option key={d} value={d}>{d}</option>
-            ))}
-          </select>
+          <CalendarPicker
+            selectedDate={date}
+            onSelectDate={(d) => handleDateChange({ target: { value: d } })}
+            fullyBookedDates={fullyBookedDates}
+            unavailableDates={unavailableDates}
+          />
         </div>
 
-        <div>
-          <label>Time</label>
-          <select value={time} onChange={e => setTime(e.target.value)} required>
-            <option value="">Select a time</option>
-            {TIME_SLOTS.map(t => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-        </div>
+        {date && (
+          <div>
+            <label>Time</label>
+            <select value={time} onChange={e => setTime(e.target.value)} required>
+              <option value="">Select a time</option>
+              {visibleSlots.map(t => {
+                // Calculate end time by adding listing duration to start time
+                const endMinutes = toMinutes(t) + duration
+                const endHH = String(Math.floor(endMinutes / 60)).padStart(2, '0')
+                const endMM = String(endMinutes % 60).padStart(2, '0')
+                const endTime = `${endHH}:${endMM}`
+                return (
+                  <option key={t} value={t}>{t} - {endTime}</option>
+                )
+              })}
+            </select>
+          </div>
+        )}
 
         <div>
           <label>Your Name</label>
