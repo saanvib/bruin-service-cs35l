@@ -14,6 +14,7 @@ export async function requireAuth(req, res, next) {
   }
 }
 
+
 export function requireRole(role) {
   return (req, res, next) => {
     if (!descopeClient.validateRoles(req.user, [role])) {
