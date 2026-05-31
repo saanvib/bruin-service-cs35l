@@ -212,6 +212,7 @@ function Description({ text }) {
 
 export default function BrowsePage() {
   const [listings, setListings] = useState([]);
+  const [availableCategories, setAvailableCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
@@ -273,6 +274,12 @@ export default function BrowsePage() {
 
   useEffect(() => {
     fetchListings();
+
+    fetch('http://localhost:3001/api/listings/categories')
+      .then((res) => res.json())
+      .then((data) => setAvailableCategories(data))
+      .catch((e) => console.error("Failed to load categories:", e));
+    
   }, []);
 
 
@@ -331,7 +338,22 @@ export default function BrowsePage() {
       />
 
       <div style={{ display: "flex", gap: "12px", marginBottom: "24px", flexWrap: "wrap" }}>
+        
         <select 
+          className="filter-input" 
+          value={category} 
+          onChange={(e) => setCategory(e.target.value)}
+          style={{ textTransform: "capitalize" }} // Makes 'nails' look like 'Nails' in the UI
+        >
+          <option value="">All Categories</option>
+          {availableCategories.map((cat, index) => (
+            <option key={index} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
+
+        {/* <select 
           className="filter-input" 
           value={category} 
           onChange={(e) => setCategory(e.target.value)}
@@ -341,13 +363,14 @@ export default function BrowsePage() {
           <option value="hair">Haircare</option>
           <option value="lashes">Lashes</option>
           <option value="hair removal">Hair Removal</option>
-        </select>
+        </select> */}
 
         <input 
           type="number" 
           placeholder="Min Price ($)" 
           className="filter-input"
           value={minPrice}
+          min="0"
           onChange={(e) => setMinPrice(e.target.value)}
         />
         
@@ -356,6 +379,7 @@ export default function BrowsePage() {
           placeholder="Max Price ($)" 
           className="filter-input"
           value={maxPrice}
+          min="0"
           onChange={(e) => setMaxPrice(e.target.value)}
         />
 

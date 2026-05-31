@@ -138,6 +138,24 @@ router.get('/', async (req, res) => {
   }
 })
 
+router.get('/categories', async (req, res) => {
+  try {
+    const rows = await sql`
+      SELECT DISTINCT category 
+      FROM listings 
+      WHERE category IS NOT NULL 
+      ORDER BY category
+    `;
+    
+    
+    const categories = rows.map(row => row.category);
+    res.json(categories);
+  } catch (err) {
+    console.error('GET /api/listings/categories failed:', err);
+    res.status(500).json({ error: 'Failed to load categories' });
+  }
+})
+
 // // GET /api/listings/:id (Single Listing Details)
 // router.get('/:id', async (req, res) => {
 //   try {
