@@ -70,61 +70,67 @@
 
 // export default router
 
-
 import { Router } from 'express'
 import { sql } from '../db.js'
 
 const router = Router()
 
-// GET /api/listings (Search & Filter)
 router.get('/', async (req, res) => {
   try {
     const { category, minPrice, maxPrice, rating } = req.query;
 
-    // 1. Build the query using a LEFT JOIN to attach reviews
-    // We use COALESCE to default the rating to 0 if a listing has no reviews yet.
     let queryStr = `
       SELECT
-        l.id, l.name, l.category, l.location, l.description, l.price::float AS price, l.duration,
-        l.photos, l.services, l.available_dates AS "availableDates",
-        COALESCE(AVG(r.rating), 0)::float AS rating,
-        COUNT(r.id)::int AS review_count
-      FROM listings l
-      LEFT JOIN reviews r ON l.id = r.listing_id
+        id, name, category, location, description, price::float AS price, duration,
+        photos, services, available_dates AS "availableDates",
+        reviews
+      FROM listings
       WHERE 1=1
     `;
     
     const queryParams = [];
     let paramIndex = 1;
 
-    // 2. Standard WHERE filters
     if (category) {
-      queryStr += ` AND l.category ILIKE $${paramIndex++}`;
+      queryStr += ` AND category ILIKE $${paramIndex++}`; 
       queryParams.push(`%${category}%`); 
     }
     if (minPrice) {
-      queryStr += ` AND l.price >= $${paramIndex++}`;
+      queryStr += ` AND price >= $${paramIndex++}`;
       queryParams.push(parseFloat(minPrice));
     }
     if (maxPrice) {
-      queryStr += ` AND l.price <= $${paramIndex++}`;
+      queryStr += ` AND price <= $${paramIndex++}`;
       queryParams.push(parseFloat(maxPrice));
     }
 
-    // 3. Group by listing ID so we can calculate the average per listing
-    queryStr += ` GROUP BY l.id`;
+    queryStr += ` ORDER BY id`;
 
-    // 4. Use HAVING to filter by the aggregated math (Average Rating)
+    const rows = await sql.query(queryStr, queryParams);
+
+    let results = rows.map(listing => {
+      const reviewsArray = listing.reviews || [];
+      const review_count = reviewsArray.length;
+      let avg_rating = 0;
+
+      if (review_count > 0) {
+        const sum = reviewsArray.reduce((total, rev) => total + rev.rating, 0);
+        avg_rating = sum / review_count;
+      }
+
+      return {
+        ...listing,
+        rating: avg_rating,
+        review_count: review_count
+      };
+    });
+
     if (rating) {
-      queryStr += ` HAVING COALESCE(AVG(r.rating), 0) >= $${paramIndex++}`;
-      queryParams.push(parseFloat(rating));
+      const minRating = parseFloat(rating);
+      results = results.filter(l => l.rating >= minRating);
     }
 
-    queryStr += ` ORDER BY l.id`;
-
-    // 5. Execute the single, highly optimized query
-    const rows = await sql.query(queryStr, queryParams);
-    res.json(rows);
+    res.json(results);
 
   } catch (err) {
     console.error('GET /api/listings failed:', err);
@@ -132,38 +138,45 @@ router.get('/', async (req, res) => {
   }
 })
 
-// GET /api/listings/:id (Single Listing Details)
+// // GET /api/listings/:id (Single Listing Details)
+// router.get('/:id', async (req, res) => {
+//   try {
+//     const rows = await sql.query(`
+//       SELECT
+//         id, name, category, location, description, price::float AS price, duration,
+//         photos, services, available_dates AS "availableDates", reviews
+//       FROM listings 
+//       WHERE id = $1
+//     `, [req.params.id]);
+    
+//     if (rows.length === 0) {
+//         return res.status(404).json({ error: 'Listing not found' });
+//     }
+
+//     res.json(rows[0]);
+
+//   } catch (err) {
+//     console.error('GET /api/listings/:id failed:', err);
+//     res.status(500).json({ error: 'Failed to load listing details' });
+//   }
+// })
+
+
 router.get('/:id', async (req, res) => {
   try {
-    // For the detail page, we fetch the listing...
-    const listingQuery = `
+    const rows = await sql`
       SELECT
         id, name, category, location, description, price::float AS price, duration,
-        photos, services, available_dates AS "availableDates"
+        photos, services, available_dates AS "availableDates", reviews
       FROM listings 
-      WHERE id = $1
+      WHERE id = ${req.params.id}
     `;
-    const listingRows = await sql.query(listingQuery, [req.params.id]);
     
-    if (listingRows.length === 0) {
+    if (rows.length === 0) {
         return res.status(404).json({ error: 'Listing not found' });
     }
 
-    const listing = listingRows[0];
-
-    // ...and then fetch the actual text reviews to display on the page
-    const reviewsQuery = `
-      SELECT id, rating, comment, created_at 
-      FROM reviews 
-      WHERE listing_id = $1 
-      ORDER BY created_at DESC
-    `;
-    const reviewRows = await sql.query(reviewsQuery, [req.params.id]);
-
-    // Attach the fetched reviews directly to the listing object
-    listing.reviews = reviewRows;
-
-    res.json(listing);
+    res.json(rows[0]);
 
   } catch (err) {
     console.error('GET /api/listings/:id failed:', err);
