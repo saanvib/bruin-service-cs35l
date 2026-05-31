@@ -353,24 +353,15 @@ export default function BrowsePage() {
           ))}
         </select>
 
-        {/* <select 
-          className="filter-input" 
-          value={category} 
-          onChange={(e) => setCategory(e.target.value)}
-        >
-          <option value="">All Categories</option>
-          <option value="nails">Nails</option>
-          <option value="hair">Haircare</option>
-          <option value="lashes">Lashes</option>
-          <option value="hair removal">Hair Removal</option>
-        </select> */}
-
         <input 
           type="number" 
           placeholder="Min Price ($)" 
           className="filter-input"
           value={minPrice}
           min="0"
+          onKeyDown={(e) => {
+            if (e.key === '-') e.preventDefault();
+          }}
           onChange={(e) => setMinPrice(e.target.value)}
         />
         
@@ -380,6 +371,9 @@ export default function BrowsePage() {
           className="filter-input"
           value={maxPrice}
           min="0"
+          onKeyDown={(e) => {
+            if (e.key === '-') e.preventDefault();
+          }}
           onChange={(e) => setMaxPrice(e.target.value)}
         />
 
