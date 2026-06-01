@@ -108,15 +108,22 @@ export default function CalendarPicker({ selectedDate, onSelectDate, fullyBooked
   const monthLabel = viewedMonth.toLocaleString('default', { month: 'long', year: 'numeric' })
 
   return (
-    <div>
+    <div className="calendar-container">
       <div className="calendar-header">
-        <button onClick={goToPrevMonth} disabled={isCurrentMonth} aria-label="Previous month">
-          &lt;
-        </button>
-        <h3>{monthLabel}</h3>
-        <button onClick={goToNextMonth} aria-label="Next month">
-          &gt;
-        </button>
+        <button
+          type="button"
+          className="calendar-nav-btn"
+          onClick={goToPrevMonth}
+          disabled={isCurrentMonth}
+          aria-label="Previous month"
+        >‹</button>
+        <p className="calendar-month-label">{monthLabel}</p>
+        <button
+          type="button"
+          className="calendar-nav-btn"
+          onClick={goToNextMonth}
+          aria-label="Next month"
+        >›</button>
       </div>
 
       <div className="calendar-grid">
