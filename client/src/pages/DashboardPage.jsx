@@ -213,7 +213,7 @@ export default function DashboardPage() {
 
       {/* header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>My listings</h1>
+        <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: '2rem', fontWeight: 400, letterSpacing: '-0.3px' }}>My listings</h1>
         <button onClick={openCreate} style={styles.btnPrimary}>+ New listing</button>
       </div>
 
@@ -288,58 +288,105 @@ export default function DashboardPage() {
                 </label>
               </div>
 
-              <label style={styles.label}>Available Date &amp; Time Slots
-                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                  <input
-                    type="date"
-                    min={new Date().toISOString().split('T')[0]}
-                    id="slotDate"
-                    style={{ ...styles.input, flex: 1 }}
-                  />
-                  <input
-                    type="time"
-                    id="slotTime"
-                    style={{ ...styles.input, flex: 1 }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const d = document.getElementById('slotDate').value
-                      const t = document.getElementById('slotTime').value
-                      if (!d || !t) return
-                      const slot = `${d}T${t}`
-                      setForm(f => ({
-                        ...f,
-                        availableDates: f.availableDates.includes(slot)
-                          ? f.availableDates
-                          : [...f.availableDates, slot].sort()
-                      }))
-                      document.getElementById('slotDate').value = ''
-                      document.getElementById('slotTime').value = ''
-                    }}
-                    style={styles.btnPrimary}
-                  >Add</button>
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.5rem' }}>
-                  {(form.availableDates || []).map(slot => (
-                    <span key={slot} style={{
-                      background: '#eff6ff', color: '#1d4ed8', borderRadius: 6,
-                      padding: '0.2rem 0.5rem', fontSize: '0.8rem',
-                      display: 'flex', alignItems: 'center', gap: '0.3rem',
-                    }}>
-                      {slot.replace('T', ' ')}
-                      <button
-                        type="button"
-                        onClick={() => setForm(f => ({ ...f, availableDates: f.availableDates.filter(x => x !== slot) }))}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1d4ed8', fontWeight: 700, padding: 0 }}
-                      >×</button>
-                    </span>
-                  ))}
-                  {(form.availableDates || []).length === 0 && (
-                    <span style={{ color: '#9ca3af', fontSize: '0.85rem' }}>No slots added yet</span>
+              <div style={{ ...styles.label, gap: '0.5rem' }}>
+                <span>Available Date &amp; Time Slots</span>
+                <div style={{
+                  border: '1px solid var(--color-hairline)',
+                  borderRadius: 'var(--radius-lg)',
+                  padding: '16px',
+                  background: 'var(--color-canvas)',
+                }}>
+                  {/* Date + time inputs row */}
+                  <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                    <input
+                      type="date"
+                      min={new Date().toISOString().split('T')[0]}
+                      id="slotDate"
+                      style={{ ...styles.input, flex: 1 }}
+                    />
+                    <input
+                      type="time"
+                      id="slotTime"
+                      style={{ ...styles.input, flex: '0 0 auto', width: 120 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const d = document.getElementById('slotDate').value
+                        const t = document.getElementById('slotTime').value
+                        if (!d || !t) return
+                        const slot = `${d}T${t}`
+                        setForm(f => ({
+                          ...f,
+                          availableDates: f.availableDates.includes(slot)
+                            ? f.availableDates
+                            : [...f.availableDates, slot].sort()
+                        }))
+                        document.getElementById('slotDate').value = ''
+                        document.getElementById('slotTime').value = ''
+                      }}
+                      style={{ ...styles.btnPrimary, flexShrink: 0 }}
+                    >+ Add</button>
+                  </div>
+
+                  {/* Slot chips */}
+                  {(form.availableDates || []).length === 0 ? (
+                    <p style={{
+                      margin: 0,
+                      fontSize: 13,
+                      color: 'var(--color-muted)',
+                      fontFamily: 'var(--font-sans)',
+                      textAlign: 'center',
+                      padding: '8px 0',
+                    }}>No slots added yet — pick a date and time above.</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {(form.availableDates || []).map(slot => {
+                        const [date, time] = slot.split('T')
+                        const [y, m, d] = date.split('-')
+                        const label = `${m}/${d}/${y} · ${time}`
+                        return (
+                          <span key={slot} style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            padding: '5px 10px 5px 12px',
+                            background: '#dbeafe',
+                            color: '#1d4ed8',
+                            borderRadius: 9999,
+                            fontSize: 13,
+                            fontWeight: 500,
+                            fontFamily: 'var(--font-sans)',
+                          }}>
+                            {label}
+                            <button
+                              type="button"
+                              onClick={() => setForm(f => ({ ...f, availableDates: f.availableDates.filter(x => x !== slot) }))}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                width: 18,
+                                height: 18,
+                                background: 'rgba(29,78,216,0.15)',
+                                border: 'none',
+                                borderRadius: '50%',
+                                cursor: 'pointer',
+                                color: '#1d4ed8',
+                                fontWeight: 700,
+                                fontSize: 12,
+                                lineHeight: 1,
+                                padding: 0,
+                              }}
+                              aria-label="Remove slot"
+                            >×</button>
+                          </span>
+                        )
+                      })}
+                    </div>
                   )}
                 </div>
-              </label>
+              </div>
 
               <label style={styles.label}>Photos
                 <div
@@ -423,7 +470,7 @@ export default function DashboardPage() {
         </div>
       )}
       <div style={{ marginTop: '2.5rem' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1.5rem' }}>My bookings</h1>
+        <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', fontWeight: 400, letterSpacing: '-0.3px', marginBottom: '1.5rem' }}>My bookings</h1>
         {bookingsLoading && <p style={{ color: '#888' }}>Loading bookings…</p>}
         {bookingsError   && <p style={{ color: '#c0392b' }}>{bookingsError}</p>}
         {!bookingsLoading && !bookingsError && bookings.length === 0 && (
@@ -511,12 +558,12 @@ const styles = {
     boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
   },
   badge: {
-    background: '#eff6ff',
+    background: '#dbeafe',
     color: '#1d4ed8',
-    borderRadius: 6,
-    padding: '0.15rem 0.5rem',
-    fontSize: '0.75rem',
-    fontWeight: 600,
+    borderRadius: 9999,
+    padding: '3px 10px',
+    fontSize: 12,
+    fontWeight: 500,
   },
   empty: {
     textAlign: 'center',

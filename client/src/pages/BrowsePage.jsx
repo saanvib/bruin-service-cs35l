@@ -187,9 +187,11 @@ function isNew(listing) {
 
 function Description({ text }) {
   const [expanded, setExpanded] = useState(false);
-  if (!text || text.length <= DESCRIPTION_LIMIT) return <p>{text}</p>;
+  if (!text || text.length <= DESCRIPTION_LIMIT) return (
+    <p style={{ color: 'var(--color-muted)', fontSize: 14, margin: '0 0 12px', lineHeight: 1.5 }}>{text}</p>
+  );
   return (
-    <p>
+    <p style={{ color: 'var(--color-muted)', fontSize: 14, margin: '0 0 12px', lineHeight: 1.5 }}>
       {expanded ? text : text.slice(0, DESCRIPTION_LIMIT) + "..."}
       <button
         onClick={() => setExpanded(!expanded)}
@@ -197,7 +199,7 @@ function Description({ text }) {
           marginLeft: 6,
           background: "none",
           border: "none",
-          color: "#2774AE",
+          color: "var(--color-blue)",
           cursor: "pointer",
           fontWeight: 600,
           fontSize: "0.9rem",
@@ -215,73 +217,44 @@ export default function BrowsePage() {
   const [availableCategories, setAvailableCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  const [search, setSearch] = useState("");
 
+  const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [minRating, setMinRating] = useState("");
-
   const [showTop, setShowTop] = useState(false);
 
-  // // Trigger backend fetch whenever a filter changes
-  // useEffect(() => {
-  //   setLoading(true);
-
-  //   // URLSearchParams is the cleanest way to build query strings 
-  //   const params = new URLSearchParams();
-  //   if (category) params.append("category", category);
-  //   if (minPrice) params.append("minPrice", minPrice);
-  //   if (maxPrice) params.append("maxPrice", maxPrice);
-  //   if (minRating) params.append("rating", minRating);
-
-  //   fetch(`http://localhost:3001/api/listings?${params.toString()}`)
-  //     .then((res) => {
-  //       if (!res.ok) throw new Error("Failed to load listings");
-  //       return res.json();
-  //     })
-  //     .then((data) => setListings(data))
-  //     .catch((e) => setError(e.message))
-  //     .finally(() => setLoading(false));
-  // }, [category, minPrice, maxPrice, minRating]);
-
-
-  const fetchListings = () => {
+  const fetchListings = (overrides = {}) => {
     setLoading(true);
-    setError(null); 
-
+    setError(null);
     const params = new URLSearchParams();
-    if (category) params.append("category", category);
+    const cat = 'category' in overrides ? overrides.category : category;
+    if (cat) params.append("category", cat);
     if (minPrice) params.append("minPrice", minPrice);
     if (maxPrice) params.append("maxPrice", maxPrice);
     if (minRating) params.append("rating", minRating);
-
     const queryString = params.toString();
-    const url = queryString 
-      ? `http://localhost:3001/api/listings?${queryString}` 
+    const url = queryString
+      ? `http://localhost:3001/api/listings?${queryString}`
       : 'http://localhost:3001/api/listings';
-
     fetch(url)
-      .then((res) => {
+      .then(res => {
         if (!res.ok) throw new Error("Failed to load listings");
         return res.json();
       })
-      .then((data) => setListings(data))
-      .catch((e) => setError(e.message))
+      .then(data => setListings(data))
+      .catch(e => setError(e.message))
       .finally(() => setLoading(false));
   };
 
   useEffect(() => {
     fetchListings();
-
     fetch('http://localhost:3001/api/listings/categories')
-      .then((res) => res.json())
-      .then((data) => setAvailableCategories(data))
-      .catch((e) => console.error("Failed to load categories:", e));
-    
+      .then(res => res.json())
+      .then(data => setAvailableCategories(data))
+      .catch(e => console.error("Failed to load categories:", e));
   }, []);
-
 
   useEffect(() => {
     const onScroll = () => setShowTop(window.scrollY > 300);
@@ -289,7 +262,7 @@ export default function BrowsePage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const filtered = listings.filter((l) => {
+  const filtered = listings.filter(l => {
     const q = search.toLowerCase();
     return (
       l.name?.toLowerCase().includes(q) ||
@@ -303,143 +276,173 @@ export default function BrowsePage() {
       <style>{`
         @keyframes glow {
           0%, 100% { box-shadow: 0 0 6px 2px rgba(229, 200, 74, 0.6); }
-          50% { box-shadow: 0 0 18px 6px rgba(229, 200, 74, 1); }
+          50%       { box-shadow: 0 0 18px 6px rgba(229, 200, 74, 1); }
         }
-        .new-listing {
-          animation: glow 1.8s ease-in-out infinite;
-          border: 2px solid #e5c84a !important;
+        .browse-card--new { animation: glow 1.8s ease-in-out infinite; }
+
+        .browse-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 24px;
         }
-        .filter-input {
-          padding: 8px 12px;
-          border-radius: 6px;
-          border: 1px solid #ccc;
-          font-size: 0.9rem;
+        .browse-card { padding: 0 !important; overflow: hidden; }
+        .browse-card__photo {
+          width: 100%;
+          aspect-ratio: 16 / 9;
+          background-color: var(--color-surface-soft);
+          overflow: hidden;
+        }
+        .browse-card__photo img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        .browse-card__body { padding: 20px 24px 24px; }
+        .browse-card__meta-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
+        .browse-card__name {
+          font-family: var(--font-serif);
+          font-size: 22px;
+          font-weight: 400;
+          letter-spacing: -0.3px;
+          margin: 0 0 6px;
+          color: var(--color-heading);
+        }
+        .browse-card__price-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin: 10px 0 16px;
+          font-size: 15px;
+          font-weight: 600;
+          color: var(--color-heading);
+        }
+        .browse-card__duration { color: var(--color-muted); font-size: 14px; font-weight: 400; }
+        .browse-card__rating { color: var(--color-muted); font-size: 13px; font-weight: 400; }
+        .browse-card__actions { display: flex; gap: 10px; }
+        .browse-filter-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+        .browse-filter-secondary {
+          display: flex;
+          gap: 12px;
+          align-items: center;
+          flex-wrap: wrap;
+          margin-bottom: 32px;
+        }
+        .browse-filter-secondary .form-input {
           flex: 1;
           min-width: 120px;
+          height: 38px;
+          width: auto;
         }
+        .browse-filter-secondary select.form-input { height: 38px; }
       `}</style>
 
-      <h1>Browse Services</h1>
+      <h1 className="section-heading" style={{ marginBottom: 28 }}>Browse Services</h1>
 
       <input
         type="text"
+        className="form-input"
         placeholder="Search by name, category, or description..."
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{
-          width: "100%",
-          padding: "10px 14px",
-          fontSize: "1rem",
-          borderRadius: 8,
-          border: "1.5px solid #e5c84a",
-          marginBottom: 12,
-          boxSizing: "border-box",
-        }}
+        onChange={e => setSearch(e.target.value)}
+        style={{ marginBottom: 20 }}
       />
 
-      <div style={{ display: "flex", gap: "12px", marginBottom: "24px", flexWrap: "wrap" }}>
-        
-        <select 
-          className="filter-input" 
-          value={category} 
-          onChange={(e) => setCategory(e.target.value)}
-          style={{ textTransform: "capitalize" }} // Makes 'nails' look like 'Nails' in the UI
-        >
-          <option value="">All Categories</option>
-          {availableCategories.map((cat, index) => (
-            <option key={index} value={cat}>
-              {cat}
-            </option>
+      <div className="browse-filter-tabs">
+        <button
+          className={`tab-pill${category === '' ? ' active' : ''}`}
+          onClick={() => { setCategory(''); fetchListings({ category: '' }); }}
+        >All</button>
+        {[...availableCategories]
+          .sort((a, b) => {
+            if (a.toLowerCase() === 'other') return 1;
+            if (b.toLowerCase() === 'other') return -1;
+            return a.localeCompare(b);
+          })
+          .map(cat => (
+            <button
+              key={cat}
+              className={`tab-pill${category === cat ? ' active' : ''}`}
+              onClick={() => { setCategory(cat); fetchListings({ category: cat }); }}
+              style={{ textTransform: 'capitalize' }}
+            >{cat}</button>
           ))}
-        </select>
+      </div>
 
-        <input 
-          type="number" 
-          placeholder="Min Price ($)" 
-          className="filter-input"
+      <div className="browse-filter-secondary">
+        <input
+          type="number"
+          className="form-input"
+          placeholder="Min Price ($)"
           value={minPrice}
           min="0"
-          onKeyDown={(e) => {
-            if (e.key === '-') e.preventDefault();
-          }}
-          onChange={(e) => setMinPrice(e.target.value)}
+          onKeyDown={e => { if (e.key === '-') e.preventDefault(); }}
+          onChange={e => setMinPrice(e.target.value)}
         />
-        
-        <input 
-          type="number" 
-          placeholder="Max Price ($)" 
-          className="filter-input"
+        <input
+          type="number"
+          className="form-input"
+          placeholder="Max Price ($)"
           value={maxPrice}
           min="0"
-          onKeyDown={(e) => {
-            if (e.key === '-') e.preventDefault();
-          }}
-          onChange={(e) => setMaxPrice(e.target.value)}
+          onKeyDown={e => { if (e.key === '-') e.preventDefault(); }}
+          onChange={e => setMaxPrice(e.target.value)}
         />
-
-        <select 
-          className="filter-input" 
-          value={minRating} 
-          onChange={(e) => setMinRating(e.target.value)}
+        <select
+          className="form-input"
+          value={minRating}
+          onChange={e => setMinRating(e.target.value)}
         >
           <option value="">Any Rating</option>
           <option value="4">4+ Stars</option>
           <option value="3">3+ Stars</option>
           <option value="2">2+ Stars</option>
         </select>
-
         <button
-        onClick={fetchListings}
-        className="filter-input"
-        style={{ background: "#2774AE", color: "white", cursor: "pointer", fontWeight: "bold", border: "none" }}
-        >
-          Apply Filters
-        </button>
+          onClick={() => fetchListings()}
+          className="btn-primary"
+          style={{ height: 38, flexShrink: 0 }}
+        >Apply Filters</button>
       </div>
 
-      {loading && <p>Loading services...</p>}
-      {error && <p style={{ color: "red" }}>Error: {error}</p>}
+      {loading && <p style={{ color: 'var(--color-muted)' }}>Loading services...</p>}
+      {error && <p className="form-error">Error: {error}</p>}
 
       {!loading && !error && filtered.length === 0 ? (
-        <p>No listings found.</p>
+        <p style={{ color: 'var(--color-muted)' }}>No listings found.</p>
       ) : (
-        filtered.map((listing) => (
-          <div
-            key={listing.id}
-            className={isNew(listing) ? "new-listing" : ""}
-            style={{
-              border: "1.5px solid #e5c84a",
-              margin: "8px 0",
-              padding: "12px 16px",
-              borderRadius: 10,
-              background: "#fff",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-              position: "relative",
-            }}
-          >
-            {isNew(listing) && (
-              <span style={{
-                position: "absolute",
-                top: 10,
-                right: 12,
-                background: "#e5c84a",
-                color: "#1a1a1a",
-                fontSize: "0.7rem",
-                fontWeight: 700,
-                padding: "2px 8px",
-                borderRadius: 99,
-              }}>NEW</span>
-            )}
-            <h2>{listing.name}</h2>
-            <Description text={listing.description} />
-            <p>
-              <strong>${listing.price}</strong> — {listing.duration} min
-              {listing.rating > 0 && <span style={{marginLeft: "12px"}}>⭐ {listing.rating.toFixed(1)} ({listing.review_count} reviews)</span>}
-            </p>
-            <Link to={`/listings/${listing.id}`}>View Details</Link>
-            <Link to={`/bookings/${listing.id}`} style={{ marginLeft: "16px" }}>Book</Link>
-          </div>
-        ))
+        <div className="browse-grid">
+          {filtered.map(listing => (
+            <div
+              key={listing.id}
+              className={`card browse-card${isNew(listing) ? ' browse-card--new' : ''}`}
+            >
+              <div className="browse-card__photo">
+                {listing.photos?.[0] && (
+                  <img src={listing.photos[0]} alt={listing.name} />
+                )}
+              </div>
+              <div className="browse-card__body">
+                <div className="browse-card__meta-row">
+                  <span className="badge-pill">{listing.category}</span>
+                  {isNew(listing) && <span className="badge-pill badge-pill--gold">NEW</span>}
+                </div>
+                <h2 className="browse-card__name">{listing.name}</h2>
+                <Description text={listing.description} />
+                <div className="browse-card__price-row">
+                  <span>${listing.price}</span>
+                  <span className="browse-card__duration">{listing.duration} min</span>
+                  {listing.rating > 0 && (
+                    <span className="browse-card__rating">⭐ {listing.rating.toFixed(1)}</span>
+                  )}
+                </div>
+                <div className="browse-card__actions">
+                  <Link to={`/listings/${listing.id}`} className="btn-secondary">View Details</Link>
+                  <Link to={`/bookings/${listing.id}`} className="btn-primary">Book Now</Link>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       {showTop && (
@@ -449,7 +452,7 @@ export default function BrowsePage() {
             position: "fixed",
             bottom: 32,
             right: 32,
-            background: "#2774AE",
+            background: "var(--color-blue)",
             color: "#fff",
             border: "none",
             borderRadius: "50%",
@@ -461,9 +464,7 @@ export default function BrowsePage() {
             zIndex: 99,
           }}
           title="Back to top"
-        >
-          ↑
-        </button>
+        >↑</button>
       )}
     </div>
   );

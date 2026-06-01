@@ -1,33 +1,76 @@
-nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background-color: #FFF4B0;
-    padding: 1rem 2rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    border-bottom: 2px solid #2774AE;
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--color-canvas);
+  padding: 0 32px;
+  height: 64px;
+  border-bottom: 2px solid var(--color-blue);
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
 .nav-logo {
-  font-family: 'Alfa Slab One', serif;
-  color: #1a3f6f;
+  font-family: var(--font-serif);
+  color: var(--color-blue);
   margin: 0;
-  font-size: 2.2rem;
-  letter-spacing: 7px;
-  font-weight: bold;
+  font-size: 1.9rem;
+  letter-spacing: -0.5px;
+  font-weight: 400;
 }
 
 .nav-links {
   display: flex;
-  gap: 20px;
+  align-items: center;
+  gap: 4px;
 }
 
 .nav-links a {
-  color: #1a3f6f;
-    text-decoration: none;
-    font-weight: bold;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-ink);
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  transition: color 0.12s ease;
 }
 
 .nav-links a:hover {
-  color: #FFD100;
+  color: var(--color-blue);
+}
+
+.nav-logout {
+  height: 36px;
+  padding: 0 14px;
+  background: transparent;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color 0.12s ease, color 0.12s ease;
+}
+
+.nav-logout:hover {
+  border-color: var(--color-blue);
+  color: var(--color-blue);
+}
+
+.nav-login {
+  height: 36px;
+  padding: 0 16px !important;
+  background-color: var(--color-blue) !important;
+  color: #ffffff !important;
+  border-radius: var(--radius-md) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.nav-login:hover {
+  background-color: var(--color-blue-dark) !important;
+  color: #ffffff !important;
 }

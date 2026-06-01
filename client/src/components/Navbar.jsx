@@ -20,7 +20,7 @@ export default function Navbar() {
         <Link to="/notifications">Notifications</Link>
         {isAuthenticated
           ? <button onClick={() => logout()} className="nav-logout">Logout</button>
-          : <Link to="/login">Login</Link>
+          : <Link to="/login" className="nav-login">Login</Link>
         }
       </div>
     </nav>

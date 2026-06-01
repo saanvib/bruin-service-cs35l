@@ -7,15 +7,13 @@ function authHeaders() {
   return { 'Authorization': `Bearer ${getSessionToken()}` }
 }
 
-const TIME_SLOTS = ["00:00","01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"]
+const TIME_SLOTS = ["00:00","01:00","02:00","03:00","04:00","05:00","06:00","07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00"]
 
 const UNAVAILABLE_SLOTS_SAMPLE = [
   { listingId: "1", date: "2026-05-01", time: "10:00" },
   { listingId: "1", date: "2026-05-03", time: "14:00" },
 ]
 
-// Single seam for swapping to a real backend later.
-// To switch to a DB: replace this body with `const res = await fetch(...); return res.json()`.
 async function loadUnavailableSlots(listingId) {
   return UNAVAILABLE_SLOTS_SAMPLE.filter(s => s.listingId === listingId)
 }
@@ -41,6 +39,53 @@ function googleCalendarUrl({ booking, listing }) {
   })
   return `https://calendar.google.com/calendar/render?${params.toString()}`
 }
+
+const receiptStyles = `
+  .booking-receipt { max-width: 520px; }
+  .booking-receipt__header {
+    display: flex; align-items: center; gap: 14px;
+    padding: 24px 28px;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+  .booking-receipt__header--confirmed { background: #d1fae5; }
+  .booking-receipt__header--cancelled { background: #fee2e2; }
+  .booking-receipt__icon {
+    width: 38px; height: 38px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700; flex-shrink: 0;
+  }
+  .booking-receipt__header--confirmed .booking-receipt__icon { background: #059669; color: white; }
+  .booking-receipt__header--cancelled .booking-receipt__icon { background: var(--color-error); color: white; }
+  .booking-receipt__title {
+    font-family: var(--font-serif); font-size: 26px; font-weight: 400;
+    letter-spacing: -0.3px; margin: 0; color: var(--color-heading);
+  }
+  .booking-receipt__details {
+    border: 1px solid var(--color-hairline);
+    border-top: none;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    padding: 4px 28px;
+  }
+  .booking-receipt__row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 13px 0; border-bottom: 1px solid var(--color-hairline);
+    font-size: 15px;
+  }
+  .booking-receipt__row:last-child { border-bottom: none; }
+  .booking-receipt__label { color: var(--color-muted); font-size: 13px; font-weight: 500; }
+  .booking-receipt__value { font-weight: 500; color: var(--color-heading); }
+  .booking-receipt__actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+
+  .booking-page { max-width: 560px; }
+  .booking-info-card { margin-bottom: 24px; }
+  .booking-info-card__meta { color: var(--color-muted); font-size: 14px; margin: 6px 0 10px; line-height: 1.5; }
+  .booking-info-card__price { font-weight: 600; color: var(--color-heading); font-size: 15px; }
+  .booking-form { display: flex; flex-direction: column; }
+  .booking-form__heading {
+    font-family: var(--font-sans); font-size: 16px; font-weight: 600;
+    margin: 0 0 20px; color: var(--color-heading);
+  }
+`
 
 export default function BookingPage() {
   const { id } = useParams()
@@ -124,38 +169,55 @@ export default function BookingPage() {
     }
   }
 
-  if (loadingListing) return <p>Loading...</p>
-  if (listingError) return <p>Error: {listingError}</p>
+  if (loadingListing) return <p style={{ color: 'var(--color-muted)' }}>Loading...</p>
+  if (listingError) return <p className="form-error">Error: {listingError}</p>
 
   if (booking) {
     const isCancelled = booking.status === 'cancelled'
+    const rows = [
+      ['Booking ID', booking.id],
+      ['Service',    listing.name],
+      ['Date',       booking.date],
+      ['Time',       booking.time],
+      ['Name',       booking.customerName],
+      ['Email',      booking.customerEmail],
+      ['Price',      `$${listing.price}`],
+      isCancelled ? ['Status', 'Cancelled'] : null,
+    ].filter(Boolean)
+
     return (
       <div>
-        <h1>{isCancelled ? 'Booking Cancelled' : 'Booking Confirmed'}</h1>
-        <p>Booking ID: {booking.id}</p>
-        <p>Service: {listing.name}</p>
-        <p>Date: {booking.date}</p>
-        <p>Time: {booking.time}</p>
-        <p>Name: {booking.customerName}</p>
-        <p>Email: {booking.customerEmail}</p>
-        <p>Price: ${listing.price}</p>
-        {isCancelled ? (
-          <p>Status: Cancelled</p>
-        ) : (
-          <>
-            <a
-              href={googleCalendarUrl({ booking, listing })}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Add to Google Calendar
-            </a>
-            {cancelError && <p>{cancelError}</p>}
-            <button type="button" onClick={handleCancel} disabled={cancelling}>
-              {cancelling ? 'Cancelling...' : 'Cancel Booking'}
-            </button>
-          </>
-        )}
+        <style>{receiptStyles}</style>
+        <div className="booking-receipt">
+          <div className={`booking-receipt__header booking-receipt__header--${isCancelled ? 'cancelled' : 'confirmed'}`}>
+            <div className="booking-receipt__icon">{isCancelled ? '✕' : '✓'}</div>
+            <h1 className="booking-receipt__title">
+              {isCancelled ? 'Booking Cancelled' : 'Booking Confirmed!'}
+            </h1>
+          </div>
+          <div className="booking-receipt__details">
+            {rows.map(([label, value]) => (
+              <div key={label} className="booking-receipt__row">
+                <span className="booking-receipt__label">{label}</span>
+                <span className="booking-receipt__value">{value}</span>
+              </div>
+            ))}
+          </div>
+          {!isCancelled && (
+            <div className="booking-receipt__actions">
+              <a
+                href={googleCalendarUrl({ booking, listing })}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-secondary"
+              >Add to Google Calendar</a>
+              {cancelError && <p className="form-error" style={{ width: '100%' }}>{cancelError}</p>}
+              <button type="button" onClick={handleCancel} disabled={cancelling} className="btn-danger">
+                {cancelling ? 'Cancelling...' : 'Cancel Booking'}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     )
   }
@@ -165,7 +227,17 @@ export default function BookingPage() {
     .filter(s => s.date === date)
     .map(s => ({ start: toMinutes(s.time), end: toMinutes(s.time) + duration }))
 
-  // Use only the provider's offered times for the selected date (fall back to all slots if legacy)
+  const providerSlotsByDate = (listing.availableDates || []).reduce((acc, slot) => {
+    if (slot.includes('T')) {
+      const [d, t] = slot.split('T')
+      if (!acc[d]) acc[d] = []
+      acc[d].push(t)
+    } else {
+      if (!acc[slot]) acc[slot] = []
+    }
+    return acc
+  }, {})
+
   const offeredTimesForDate = date
     ? (providerSlotsByDate[date] && providerSlotsByDate[date].length > 0
         ? providerSlotsByDate[date]
@@ -178,7 +250,6 @@ export default function BookingPage() {
     return !blocked.some(b => overlaps(start, end, b.start, b.end))
   })
 
-  // A day is fully booked if every time slot overlaps with a blocked slot
   function getSlotsForDate(d) {
     const blockedForDate = [...unavailableSlots, ...sessionBookings]
       .filter(s => s.date === d)
@@ -190,24 +261,9 @@ export default function BookingPage() {
     })
   }
 
-  // A day is fully booked if all its slots are taken
   const allBlockedDates = [...new Set([...unavailableSlots, ...sessionBookings].map(s => s.date))]
   const fullyBookedDates = allBlockedDates.filter(d => getSlotsForDate(d).length === 0)
 
-  // Build a map of date -> [times] from provider's availableDates (now stored as "YYYY-MM-DDTHH:mm")
-  const providerSlotsByDate = (listing.availableDates || []).reduce((acc, slot) => {
-    if (slot.includes('T')) {
-      const [d, t] = slot.split('T')
-      if (!acc[d]) acc[d] = []
-      acc[d].push(t)
-    } else {
-      // legacy date-only format — treat as full day
-      if (!acc[slot]) acc[slot] = []
-    }
-    return acc
-  }, {})
-
-  // Days not offered by the provider at all
   const unavailableDates = (() => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -242,68 +298,84 @@ export default function BookingPage() {
 
   return (
     <div>
-      <h1>Book Appointment</h1>
-
-      <h2>{listing.name}</h2>
-      <p>{listing.description}</p>
-      <p>Price: ${listing.price} / {listing.duration} min</p>
-
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Date</label>
-          <CalendarPicker
-            selectedDate={date}
-            onSelectDate={(d) => handleDateChange({ target: { value: d } })}
-            fullyBookedDates={fullyBookedDates}
-            unavailableDates={unavailableDates}
-          />
+      <style>{receiptStyles}</style>
+      <div className="booking-page">
+        {/* Listing info card */}
+        <div className="card booking-info-card">
+          <h2 className="page-title" style={{ marginBottom: 6 }}>{listing.name}</h2>
+          <p className="booking-info-card__meta">{listing.description}</p>
+          <span className="booking-info-card__price">${listing.price} · {listing.duration} min</span>
         </div>
 
-        {date && (
-          <div>
-            <label>Time</label>
-            <select value={time} onChange={e => setTime(e.target.value)} required>
-              <option value="">Select a time</option>
-              {visibleSlots.map(t => {
-                // Calculate end time by adding listing duration to start time
-                const endMinutes = toMinutes(t) + duration
-                const endHH = String(Math.floor(endMinutes / 60)).padStart(2, '0')
-                const endMM = String(endMinutes % 60).padStart(2, '0')
-                const endTime = `${endHH}:${endMM}`
-                return (
-                  <option key={t} value={t}>{t} - {endTime}</option>
-                )
-              })}
-            </select>
-          </div>
-        )}
+        {/* Booking form */}
+        <form onSubmit={handleSubmit} className="booking-form">
+          <p className="booking-form__heading">Select a date &amp; time</p>
 
-        <div>
-          <label>Your Name</label>
-          <input
-            type="text"
-            value={customerName}
-            onChange={e => setCustomerName(e.target.value)}
-            required
-          />
-        </div>
+          <label className="form-label">Date
+            <CalendarPicker
+              selectedDate={date}
+              onSelectDate={d => handleDateChange({ target: { value: d } })}
+              fullyBookedDates={fullyBookedDates}
+              unavailableDates={unavailableDates}
+            />
+          </label>
 
-        <div>
-          <label>Your Email</label>
-          <input
-            type="email"
-            value={customerEmail}
-            onChange={e => setCustomerEmail(e.target.value)}
-            required
-          />
-        </div>
+          {date && (
+            <label className="form-label" style={{ marginTop: 8 }}>Time
+              <select
+                value={time}
+                onChange={e => setTime(e.target.value)}
+                required
+                className="form-input"
+                style={{ height: 'auto', padding: '10px 14px' }}
+              >
+                <option value="">Select a time</option>
+                {visibleSlots.map(t => {
+                  const endMinutes = toMinutes(t) + duration
+                  const endHH = String(Math.floor(endMinutes / 60)).padStart(2, '0')
+                  const endMM = String(endMinutes % 60).padStart(2, '0')
+                  return (
+                    <option key={t} value={t}>{t} – {endHH}:{endMM}</option>
+                  )
+                })}
+              </select>
+            </label>
+          )}
 
-        {submitError && <p>{submitError}</p>}
+          <label className="form-label" style={{ marginTop: 8 }}>Your Name
+            <input
+              type="text"
+              className="form-input"
+              value={customerName}
+              onChange={e => setCustomerName(e.target.value)}
+              required
+              placeholder="Jane Doe"
+            />
+          </label>
 
-        <button type="submit" disabled={submitting}>
-          {submitting ? 'Booking...' : 'Confirm Booking'}
-        </button>
-      </form>
+          <label className="form-label">Your Email
+            <input
+              type="email"
+              className="form-input"
+              value={customerEmail}
+              onChange={e => setCustomerEmail(e.target.value)}
+              required
+              placeholder="jane@example.com"
+            />
+          </label>
+
+          {submitError && <p className="form-error">{submitError}</p>}
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="btn-primary btn-full"
+            style={{ marginTop: 8 }}
+          >
+            {submitting ? 'Booking...' : 'Confirm Booking'}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }
