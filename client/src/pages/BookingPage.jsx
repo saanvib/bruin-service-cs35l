@@ -106,7 +106,7 @@ export default function BookingPage() {
   useEffect(() => {
     setLoadingListing(true)
     setListingError(null)
-    fetch(`/api/listings/${id}`)
+    fetch(`/api/listings/${id}`, { headers: authHeaders() })
       .then(res => {
         if (!res.ok) throw new Error(`Listing not found (${res.status})`)
         return res.json()

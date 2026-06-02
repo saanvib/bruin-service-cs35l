@@ -3,6 +3,10 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { getSessionToken } from "@descope/react-sdk";
 import PhotoGallery from "../components/PhotoGallery";
 
+function authHeaders() {
+  return { Authorization: `Bearer ${getSessionToken()}` };
+}
+
 export default function ListingDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -21,7 +25,7 @@ export default function ListingDetailPage() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
   useEffect(() => {
-    fetch(`http://localhost:3001/api/listings/${id}`)
+    fetch(`http://localhost:3001/api/listings/${id}`, { headers: authHeaders() })
       .then((res) => {
         if (!res.ok) throw new Error("Listing not found");
         return res.json();
@@ -33,7 +37,7 @@ export default function ListingDetailPage() {
 
   function fetchReviews() {
     setReviewsLoading(true);
-    fetch(`http://localhost:3001/api/listings/${id}/reviews`)
+    fetch(`http://localhost:3001/api/listings/${id}/reviews`, { headers: authHeaders() })
       .then((res) => res.json())
       .then((data) => setReviews(Array.isArray(data) ? data : []))
       .catch(() => setReviews([]))
@@ -50,7 +54,7 @@ export default function ListingDetailPage() {
     try {
       const res = await fetch(`http://localhost:3001/api/listings/${id}/reviews`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { ...authHeaders(), "Content-Type": "application/json" },
         body: JSON.stringify({ rating: Number(rating), comment }),
       });
       if (!res.ok) {
