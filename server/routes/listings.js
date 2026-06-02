@@ -184,7 +184,7 @@ router.get('/:id', async (req, res) => {
   try {
     const rows = await sql`
       SELECT
-        id, name, category, location, description, price::float AS price, duration,
+        id, provider_id, name, category, location, description, price::float AS price, duration,
         photos, services, available_dates AS "availableDates", reviews
       FROM listings 
       WHERE id = ${req.params.id}

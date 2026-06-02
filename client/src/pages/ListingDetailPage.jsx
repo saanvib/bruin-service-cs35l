@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { getSessionToken } from "@descope/react-sdk";
 import PhotoGallery from "../components/PhotoGallery";
 
 export default function ListingDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [messaging, setMessaging] = useState(false);
 
   const [reviews, setReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
@@ -65,6 +68,35 @@ export default function ListingDetailPage() {
     }
   }
 
+  // Creates (or finds) a conversation with this provider, then navigates to /chat
+  async function handleMessageProvider() {
+    if (!listing) return
+    setMessaging(true)
+    try {
+      const res = await fetch('http://localhost:3001/api/chat/conversations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getSessionToken()}`,
+        },
+        body: JSON.stringify({
+          providerId: listing.provider_id,
+          listingId: id,
+          listingName: listing.name,
+        }),
+      })
+      if (!res.ok) throw new Error('Could not start conversation')
+      const conversation = await res.json()
+      // Navigate to chat page and pre-select this conversation
+      navigate('/chat', { state: { conversationId: conversation.id } })
+    } catch (e) {
+      console.error(e)
+      alert('Could not start conversation. Please try again.')
+    } finally {
+      setMessaging(false)
+    }
+  }
+
   const avgRating = reviews.length > 0
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : null;
@@ -113,6 +145,13 @@ export default function ListingDetailPage() {
         <div className="listing-header__book-row">
           <span className="listing-header__price">${listing.price} · {listing.duration} min</span>
           <Link to={`/bookings/${id}`} className="btn-primary">Book Now</Link>
+          <button
+            className="btn-secondary"
+            onClick={handleMessageProvider}
+            disabled={messaging}
+          >
+            {messaging ? 'Opening...' : '💬 Message Provider'}
+          </button>
         </div>
       </div>
 
