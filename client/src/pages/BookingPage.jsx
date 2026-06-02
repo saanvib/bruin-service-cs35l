@@ -108,6 +108,7 @@ export default function BookingPage() {
 
   const [unavailableSlots, setUnavailableSlots] = useState([])
   const [sessionBookings, setSessionBookings] = useState([])
+  const [calendarError, setCalendarError] = useState(null)
 
   useEffect(() => {
     setLoadingListing(true)
@@ -122,7 +123,10 @@ export default function BookingPage() {
   }, [id])
 
   useEffect(() => {
-    loadUnavailableSlots(id).then(setUnavailableSlots)
+    setCalendarError(null)
+    loadUnavailableSlots(id)
+      .then(setUnavailableSlots)
+      .catch(() => setCalendarError('Calendar failed to load. Please try again.'))
   }, [id])
 
   async function handleSubmit(e) {
@@ -311,6 +315,7 @@ export default function BookingPage() {
         <form onSubmit={handleSubmit} className="booking-form">
           <p className="booking-form__heading">Select a date &amp; time</p>
 
+          {calendarError && <p className="form-error">{calendarError}</p>}
           <label className="form-label">Date
             <CalendarPicker
               selectedDate={date}
