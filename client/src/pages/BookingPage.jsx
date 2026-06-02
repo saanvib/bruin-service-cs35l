@@ -115,8 +115,10 @@ export default function BookingPage() {
       .catch(err => { setListingError(err.message); setLoadingListing(false) })
   }, [id])
 
-  useEffect(() => {
+  function fetchSlots() {
     setCalendarError(null)
+    setDate('')
+    setTime('')
     fetch(`/api/bookings?listingId=${id}`, { headers: authHeaders() })
       .then(res => {
         if (!res.ok) throw new Error(`Failed to load bookings (${res.status})`)
@@ -124,7 +126,9 @@ export default function BookingPage() {
       })
       .then(setUnavailableSlots)
       .catch(() => setCalendarError('Calendar failed to load. Please try again.'))
-  }, [id])
+  }
+
+  useEffect(() => { fetchSlots() }, [id])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -312,15 +316,23 @@ export default function BookingPage() {
         <form onSubmit={handleSubmit} className="booking-form">
           <p className="booking-form__heading">Select a date &amp; time</p>
 
-          {calendarError && <p className="form-error">{calendarError}</p>}
-          <label className="form-label">Date
-            <CalendarPicker
-              selectedDate={date}
-              onSelectDate={d => handleDateChange({ target: { value: d } })}
-              fullyBookedDates={fullyBookedDates}
-              unavailableDates={unavailableDates}
-            />
-          </label>
+          {calendarError ? (
+            <div>
+              <p className="form-error">{calendarError}</p>
+              <button type="button" className="btn-secondary" onClick={fetchSlots}>
+                Retry
+              </button>
+            </div>
+          ) : (
+            <label className="form-label">Date
+              <CalendarPicker
+                selectedDate={date}
+                onSelectDate={d => handleDateChange({ target: { value: d } })}
+                fullyBookedDates={fullyBookedDates}
+                unavailableDates={unavailableDates}
+              />
+            </label>
+          )}
 
           {date && (
             <label className="form-label" style={{ marginTop: 8 }}>Time
