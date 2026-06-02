@@ -348,61 +348,76 @@ export default function BrowsePage() {
       />
 
       <div className="browse-filter-tabs">
-        <button
-          className={`tab-pill${category === '' ? ' active' : ''}`}
-          onClick={() => { setCategory(''); fetchListings({ category: '' }); }}
-        >All</button>
-        {[...availableCategories]
-          .sort((a, b) => {
-            if (a.toLowerCase() === 'other') return 1;
-            if (b.toLowerCase() === 'other') return -1;
-            return a.localeCompare(b);
-          })
-          .map(cat => (
-            <button
-              key={cat}
-              className={`tab-pill${category === cat ? ' active' : ''}`}
-              onClick={() => { setCategory(cat); fetchListings({ category: cat }); }}
-              style={{ textTransform: 'capitalize' }}
-            >{cat}</button>
-          ))}
-      </div>
+  <button
+    className={`tab-pill${category === '' ? ' active' : ''}`}
+    onClick={() => { setCategory(''); fetchListings({ category: '' }); }}
+  >All</button>
+  {[...availableCategories]
+    .sort((a, b) => {
+      if (a.toLowerCase() === 'other') return 1;
+      if (b.toLowerCase() === 'other') return -1;
+      return a.localeCompare(b);
+    })
+    .map(cat => (
+      <button
+        key={cat}
+        className={`tab-pill${category === cat ? ' active' : ''}`}
+        onClick={() => { setCategory(cat); fetchListings({ category: cat }); }}
+        style={{ textTransform: 'capitalize' }}
+      >{cat}</button>
+    ))}
+</div>
 
-      <div className="browse-filter-secondary">
-        <input
-          type="number"
-          className="form-input"
-          placeholder="Min Price ($)"
-          value={minPrice}
-          min="0"
-          onKeyDown={e => { if (e.key === '-') e.preventDefault(); }}
-          onChange={e => setMinPrice(e.target.value)}
-        />
-        <input
-          type="number"
-          className="form-input"
-          placeholder="Max Price ($)"
-          value={maxPrice}
-          min="0"
-          onKeyDown={e => { if (e.key === '-') e.preventDefault(); }}
-          onChange={e => setMaxPrice(e.target.value)}
-        />
-        <select
-          className="form-input"
-          value={minRating}
-          onChange={e => setMinRating(e.target.value)}
-        >
-          <option value="">Any Rating</option>
-          <option value="4">4+ Stars</option>
-          <option value="3">3+ Stars</option>
-          <option value="2">2+ Stars</option>
-        </select>
-        <button
-          onClick={() => fetchListings()}
-          className="btn-primary"
-          style={{ height: 38, flexShrink: 0 }}
-        >Apply Filters</button>
-      </div>
+<div className="browse-filter-secondary">
+  <input
+    type="number"
+    className="form-input"
+    placeholder="Min Price ($)"
+    value={minPrice}
+    min="0"
+    onKeyDown={e => { if (e.key === '-') e.preventDefault(); }}
+    onChange={e => setMinPrice(e.target.value)}
+  />
+  <input
+    type="number"
+    className="form-input"
+    placeholder="Max Price ($)"
+    value={maxPrice}
+    min="0"
+    onKeyDown={e => { if (e.key === '-') e.preventDefault(); }}
+    onChange={e => setMaxPrice(e.target.value)}
+  />
+  <select
+    className="form-input"
+    value={minRating}
+    onChange={e => setMinRating(e.target.value)}
+  >
+    <option value="">Any Rating</option>
+    <option value="4">4+ Stars</option>
+    <option value="3">3+ Stars</option>
+    <option value="2">2+ Stars</option>
+  </select>
+  <div style={{ display: "flex", gap: 10, flexShrink: 0 }}>
+    <button
+      onClick={() => fetchListings()}
+      className="btn-primary"
+      style={{ height: 38 }}
+    >Apply Filters</button>
+    <button
+      onClick={() => {
+        setSearch("");
+        setCategory("");
+        setMinPrice("");
+        setMaxPrice("");
+        setMinRating("");
+        fetchListings({ category: "" });
+      }}
+      className="btn-secondary"
+      style={{ height: 38 }}
+    >Clear Filters</button>
+  </div>
+
+</div>
 
       {loading && <p style={{ color: 'var(--color-muted)' }}>Loading services...</p>}
       {error && <p className="form-error">Error: {error}</p>}
