@@ -19,13 +19,13 @@ app.use(cors())
 app.use(express.json({ limit: '10mb' }))
 
 app.use('/api/auth',          authRoutes)
-app.use('/api/listings',      listingsRoutes)
-app.use('/api/providers',     providersRoutes)
+app.use('/api/listings',      requireAuth,listingsRoutes)
+app.use('/api/providers',     requireAuth, providersRoutes)
 app.use('/api/dashboard',     requireAuth, requireRole('provider'), dashboardRoutes)
 app.use('/api/bookings',      requireAuth, requireRole('customer'), bookingsRoutes)
 app.use('/api/chat',          chatRoutes)
 app.use('/api/notifications', notificationsRoutes)
-app.use('/api/listings',      reviewsRoutes)
+app.use('/api/listings',      requireAuth, reviewsRoutes)
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`)
