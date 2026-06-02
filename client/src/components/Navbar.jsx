@@ -16,6 +16,7 @@ export default function Navbar() {
         <Link to="/">Home</Link>
         {isCustomer && <Link to="/browse">Browse</Link>}
         {isProvider && <Link to="/dashboard">Dashboard</Link>}
+        {isCustomer && <Link to="/favorites">Saved</Link>}
         <Link to="/chat">Chat</Link>
         <Link to="/notifications">Notifications</Link>
         {isAuthenticated

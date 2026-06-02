@@ -11,6 +11,7 @@ import DashboardPage from './pages/DashboardPage'
 import BookingPage from './pages/BookingPage'
 import ChatPage from './pages/ChatPage'
 import NotificationsPage from './pages/NotificationsPage'
+import SavedListingsPage from './pages/SavedListingPage'
 import './App.css';
 
 function RootLayout() {
@@ -43,6 +44,7 @@ const router = createBrowserRouter([
             children: [
               { path: 'browse',       element: <BrowsePage /> },
               { path: 'bookings/:id', element: <BookingPage /> },
+              { path: 'favorites', element: <SavedListingsPage /> },
             ]
           },
           {

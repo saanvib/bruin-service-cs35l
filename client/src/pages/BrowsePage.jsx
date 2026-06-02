@@ -176,6 +176,15 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
+function getFavorites() {
+  try { return JSON.parse(localStorage.getItem("favorites") || "[]"); }
+  catch { return []; }
+}
+
+function saveFavorites(favs) {
+  localStorage.setItem("favorites", JSON.stringify(favs));
+}
+
 const DESCRIPTION_LIMIT = 100;
 
 function isNew(listing) {
@@ -224,6 +233,8 @@ export default function BrowsePage() {
   const [maxPrice, setMaxPrice] = useState("");
   const [minRating, setMinRating] = useState("");
   const [showTop, setShowTop] = useState(false);
+  const [favorites, setFavorites] = useState(getFavorites);
+
 
   const fetchListings = (overrides = {}) => {
     setLoading(true);
@@ -247,6 +258,16 @@ export default function BrowsePage() {
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
   };
+
+  function toggleFavorite(listing) {
+  const favs = getFavorites();
+  const exists = favs.some(f => f.id === listing.id);
+  const updated = exists
+    ? favs.filter(f => f.id !== listing.id)
+    : [...favs, listing];
+  saveFavorites(updated);
+  setFavorites(updated);
+}
 
   useEffect(() => {
     fetchListings();
@@ -451,9 +472,22 @@ export default function BrowsePage() {
                   )}
                 </div>
                 <div className="browse-card__actions">
-                  <Link to={`/listings/${listing.id}`} className="btn-secondary">View Details</Link>
-                  <Link to={`/bookings/${listing.id}`} className="btn-primary">Book Now</Link>
-                </div>
+  <Link to={`/listings/${listing.id}`} className="btn-secondary">View Details</Link>
+  <Link to={`/bookings/${listing.id}`} className="btn-primary">Book Now</Link>
+  <button
+    onClick={() => toggleFavorite(listing)}
+    style={{
+      background: "none",
+      border: "none",
+      fontSize: "1.3rem",
+      cursor: "pointer",
+      padding: "0 4px",
+    }}
+    title={favorites.some(f => f.id === listing.id) ? "Remove from saved" : "Save listing"}
+  >
+    {favorites.some(f => f.id === listing.id) ? "❤️" : "🤍"}
+  </button>
+</div>
               </div>
             </div>
           ))}
