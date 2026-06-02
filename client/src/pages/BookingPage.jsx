@@ -9,13 +9,10 @@ function authHeaders() {
 
 const TIME_SLOTS = ["00:00","01:00","02:00","03:00","04:00","05:00","06:00","07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00"]
 
-const UNAVAILABLE_SLOTS_SAMPLE = [
-  { listingId: "1", date: "2026-05-01", time: "10:00" },
-  { listingId: "1", date: "2026-05-03", time: "14:00" },
-]
-
 async function loadUnavailableSlots(listingId) {
-  return UNAVAILABLE_SLOTS_SAMPLE.filter(s => s.listingId === listingId)
+  const res = await fetch(`/api/bookings?listingId=${listingId}`)
+  if (!res.ok) throw new Error(`Failed to load bookings (${res.status})`)
+  return res.json()
 }
 
 function toMinutes(hhmm) {
