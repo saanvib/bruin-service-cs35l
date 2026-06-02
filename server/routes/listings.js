@@ -85,7 +85,7 @@ router.get('/', async (req, res) => {
         photos, services, available_dates AS "availableDates",
         reviews
       FROM listings
-      WHERE 1=1
+      WHERE taken_down = false
     `;
     
     const queryParams = [];
@@ -187,7 +187,7 @@ router.get('/:id', async (req, res) => {
         id, provider_id, name, category, location, description, price::float AS price, duration,
         photos, services, available_dates AS "availableDates", reviews
       FROM listings 
-      WHERE id = ${req.params.id}
+      WHERE id = ${req.params.id} AND taken_down = false
     `;
     
     if (rows.length === 0) {
