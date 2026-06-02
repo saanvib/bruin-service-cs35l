@@ -132,7 +132,6 @@ export default function ChatPage() {
   // Get the "other person's" name for the header
   function getOtherName(conversation) {
     if (!conversation) return ''
-    // We show the listing name as the thread title (as requested)
     return conversation.listing_name
   }
 
