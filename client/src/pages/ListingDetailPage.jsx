@@ -14,6 +14,8 @@ export default function ListingDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [messaging, setMessaging] = useState(false);
+  const [flagging, setFlagging] = useState(false);
+  const [flagged, setFlagged] = useState(false);
 
   const [reviews, setReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
@@ -101,6 +103,28 @@ export default function ListingDetailPage() {
     }
   }
 
+  async function handleFlag() {
+    if (!confirm("Report this listing as inappropriate?")) return;
+    setFlagging(true);
+    try {
+      const res = await fetch(`http://localhost:3001/api/listings/${id}/flag`, {
+        method: "POST",
+        headers: authHeaders(),
+      });
+      if (!res.ok) throw new Error("Could not report listing");
+      const data = await res.json();
+      setFlagged(true);
+      if (data.takenDown) {
+        alert("This listing has been taken down.");
+        navigate("/browse");
+      }
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setFlagging(false);
+    }
+  }
+
   const avgRating = reviews.length > 0
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : null;
@@ -155,6 +179,13 @@ export default function ListingDetailPage() {
             disabled={messaging}
           >
             {messaging ? 'Opening...' : '💬 Message Provider'}
+          </button>
+          <button
+            className="btn-secondary"
+            onClick={handleFlag}
+            disabled={flagging || flagged}
+          >
+            {flagged ? '🚩 Reported' : flagging ? 'Reporting...' : '🚩 Report'}
           </button>
         </div>
       </div>
