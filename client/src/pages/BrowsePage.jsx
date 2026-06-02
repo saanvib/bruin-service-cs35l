@@ -172,9 +172,13 @@
 // }
 
 
-
+import { getSessionToken } from '@descope/react-sdk'
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+
+function authHeaders() {
+  return { 'Authorization': `Bearer ${getSessionToken()}` }
+}
 
 function getFavorites() {
   try { return JSON.parse(localStorage.getItem("favorites") || "[]"); }
@@ -249,15 +253,15 @@ export default function BrowsePage() {
     const url = queryString
       ? `http://localhost:3001/api/listings?${queryString}`
       : 'http://localhost:3001/api/listings';
-    fetch(url)
-      .then(res => {
-        if (!res.ok) throw new Error("Failed to load listings");
-        return res.json();
-      })
-      .then(data => setListings(data))
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false));
-  };
+    fetch(url, { headers: authHeaders() })
+  .then(res => {
+    if (!res.ok) throw new Error("Failed to load listings");
+    return res.json();
+  })
+  .then(data => setListings(data))
+  .catch(e => setError(e.message))
+  .finally(() => setLoading(false));
+};
 
   function toggleFavorite(listing) {
   const favs = getFavorites();
@@ -271,9 +275,8 @@ export default function BrowsePage() {
 
   useEffect(() => {
     fetchListings();
-    fetch('http://localhost:3001/api/listings/categories')
-      .then(res => res.json())
-      .then(data => setAvailableCategories(data))
+      fetch('http://localhost:3001/api/listings/categories', { headers: authHeaders() })      .then(res => res.json())
+      .then(data => setAvailableCategories(Array.isArray(data) ? data : []))
       .catch(e => console.error("Failed to load categories:", e));
   }, []);
 
