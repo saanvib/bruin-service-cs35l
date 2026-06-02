@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { getSessionToken } from "@descope/react-sdk";
+import { getSessionToken, useSession } from "@descope/react-sdk";
 import PhotoGallery from "../components/PhotoGallery";
 
 function authHeaders() {
@@ -20,6 +20,7 @@ export default function ListingDetailPage() {
   const [reviews, setReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
 
+  const { isAuthenticated } = useSession();
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -234,32 +235,38 @@ export default function ListingDetailPage() {
 
       {/* Review form */}
       <h2 className="page-title" style={{ marginBottom: 20 }}>Leave a Review</h2>
-      <form onSubmit={handleReviewSubmit} style={{ maxWidth: 400 }}>
-        <label className="form-label">Rating
-          <select
-            value={rating}
-            onChange={e => setRating(e.target.value)}
-            className="form-input"
-            style={{ height: 'auto', padding: '10px 14px' }}
-          >
-            {[5, 4, 3, 2, 1].map(n => <option key={n} value={n}>{n} ⭐</option>)}
-          </select>
-        </label>
-        <label className="form-label">Comment (optional)
-          <textarea
-            value={comment}
-            onChange={e => setComment(e.target.value)}
-            rows={3}
-            placeholder="Share your experience..."
-            className="form-textarea"
-          />
-        </label>
-        {submitError && <p className="form-error">{submitError}</p>}
-        {submitSuccess && <p className="form-success">Review submitted!</p>}
-        <button type="submit" disabled={submitting} className="btn-primary">
-          {submitting ? "Submitting..." : "Submit Review"}
-        </button>
-      </form>
+      {isAuthenticated ? (
+        <form onSubmit={handleReviewSubmit} style={{ maxWidth: 400 }}>
+          <label className="form-label">Rating
+            <select
+              value={rating}
+              onChange={e => setRating(e.target.value)}
+              className="form-input"
+              style={{ height: 'auto', padding: '10px 14px' }}
+            >
+              {[5, 4, 3, 2, 1].map(n => <option key={n} value={n}>{n} ⭐</option>)}
+            </select>
+          </label>
+          <label className="form-label">Comment (optional)
+            <textarea
+              value={comment}
+              onChange={e => setComment(e.target.value)}
+              rows={3}
+              placeholder="Share your experience..."
+              className="form-textarea"
+            />
+          </label>
+          {submitError && <p className="form-error">{submitError}</p>}
+          {submitSuccess && <p className="form-success">Review submitted!</p>}
+          <button type="submit" disabled={submitting} className="btn-primary">
+            {submitting ? "Submitting..." : "Submit Review"}
+          </button>
+        </form>
+      ) : (
+        <p style={{ color: 'var(--color-muted)' }}>
+          <Link to="/login">Log in</Link> to leave a review.
+        </p>
+      )}
     </div>
   );
 }
