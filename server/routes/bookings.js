@@ -37,6 +37,36 @@ router.get('/', async (req, res) => {
   }
 })
 
+router.get('/mine', async (req, res) => {
+  const email = req.user?.token?.email
+  if (!email) return res.status(401).json({ error: 'Unauthorized' })
+  try {
+    const today = new Date().toISOString().split('T')[0]
+    const rows = await sql.query(
+      `SELECT
+         b.id,
+         b.listing_id        AS "listingId",
+         l.name              AS "listingName",
+         to_char(b.date, 'YYYY-MM-DD') AS date,
+         b.time,
+         b.customer_name     AS "customerName",
+         b.customer_email    AS "customerEmail",
+         b.status
+       FROM bookings b
+       LEFT JOIN listings l ON l.id = b.listing_id
+       WHERE b.customer_email = $1
+         AND b.status <> 'cancelled'
+         AND b.date >= $2
+       ORDER BY b.date, b.time`,
+      [email, today]
+    )
+    res.json(rows)
+  } catch (err) {
+    console.error('GET /api/bookings/mine failed:', err)
+    res.status(500).json({ error: 'Failed to load bookings' })
+  }
+})
+
 router.get('/:id', async (req, res) => {
   try {
     const rows = await sql.query(`${SELECT} WHERE id = $1`, [req.params.id])

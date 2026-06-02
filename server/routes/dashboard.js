@@ -97,4 +97,36 @@ router.delete('/listings/:id', async (req, res) => {
   }
 })
 
+// GET /api/dashboard/profile
+router.get('/profile', async (req, res) => {
+  const providerId = req.user.token.sub
+  try {
+    const [row] = await sql`
+      SELECT bio FROM provider_profiles WHERE provider_id = ${providerId}
+    `
+    res.json({ bio: row?.bio ?? '' })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ error: 'Failed to fetch profile' })
+  }
+})
+
+// PUT /api/dashboard/profile
+router.put('/profile', async (req, res) => {
+  const providerId = req.user.token.sub
+  const { bio } = req.body
+  try {
+    const [row] = await sql`
+      INSERT INTO provider_profiles (provider_id, bio)
+      VALUES (${providerId}, ${bio ?? ''})
+      ON CONFLICT (provider_id) DO UPDATE SET bio = EXCLUDED.bio
+      RETURNING bio
+    `
+    res.json({ bio: row.bio })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ error: 'Failed to update profile' })
+  }
+})
+
 export default router
