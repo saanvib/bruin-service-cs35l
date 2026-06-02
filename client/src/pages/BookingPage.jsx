@@ -9,14 +9,7 @@ function authHeaders() {
 
 const TIME_SLOTS = ["00:00","01:00","02:00","03:00","04:00","05:00","06:00","07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00"]
 
-const UNAVAILABLE_SLOTS_SAMPLE = [
-  { listingId: "1", date: "2026-05-01", time: "10:00" },
-  { listingId: "1", date: "2026-05-03", time: "14:00" },
-]
 
-async function loadUnavailableSlots(listingId) {
-  return UNAVAILABLE_SLOTS_SAMPLE.filter(s => s.listingId === listingId)
-}
 
 function toMinutes(hhmm) {
   const [h, m] = hhmm.split(':').map(Number)
@@ -108,6 +101,7 @@ export default function BookingPage() {
 
   const [unavailableSlots, setUnavailableSlots] = useState([])
   const [sessionBookings, setSessionBookings] = useState([])
+  const [calendarError, setCalendarError] = useState(null)
 
   useEffect(() => {
     setLoadingListing(true)
@@ -121,9 +115,20 @@ export default function BookingPage() {
       .catch(err => { setListingError(err.message); setLoadingListing(false) })
   }, [id])
 
-  useEffect(() => {
-    loadUnavailableSlots(id).then(setUnavailableSlots)
-  }, [id])
+  function fetchSlots() {
+    setCalendarError(null)
+    setDate('')
+    setTime('')
+    fetch(`/api/bookings?listingId=${id}`, { headers: authHeaders() })
+      .then(res => {
+        if (!res.ok) throw new Error(`Failed to load bookings (${res.status})`)
+        return res.json()
+      })
+      .then(setUnavailableSlots)
+      .catch(() => setCalendarError('Calendar failed to load. Please try again.'))
+  }
+
+  useEffect(() => { fetchSlots() }, [id])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -311,14 +316,23 @@ export default function BookingPage() {
         <form onSubmit={handleSubmit} className="booking-form">
           <p className="booking-form__heading">Select a date &amp; time</p>
 
-          <label className="form-label">Date
-            <CalendarPicker
-              selectedDate={date}
-              onSelectDate={d => handleDateChange({ target: { value: d } })}
-              fullyBookedDates={fullyBookedDates}
-              unavailableDates={unavailableDates}
-            />
-          </label>
+          {calendarError ? (
+            <div>
+              <p className="form-error">{calendarError}</p>
+              <button type="button" className="btn-secondary" onClick={fetchSlots}>
+                Retry
+              </button>
+            </div>
+          ) : (
+            <label className="form-label">Date
+              <CalendarPicker
+                selectedDate={date}
+                onSelectDate={d => handleDateChange({ target: { value: d } })}
+                fullyBookedDates={fullyBookedDates}
+                unavailableDates={unavailableDates}
+              />
+            </label>
+          )}
 
           {date && (
             <label className="form-label" style={{ marginTop: 8 }}>Time
