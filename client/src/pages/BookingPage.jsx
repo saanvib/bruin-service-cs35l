@@ -9,11 +9,7 @@ function authHeaders() {
 
 const TIME_SLOTS = ["00:00","01:00","02:00","03:00","04:00","05:00","06:00","07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00"]
 
-async function loadUnavailableSlots(listingId) {
-  const res = await fetch(`/api/bookings?listingId=${listingId}`)
-  if (!res.ok) throw new Error(`Failed to load bookings (${res.status})`)
-  return res.json()
-}
+
 
 function toMinutes(hhmm) {
   const [h, m] = hhmm.split(':').map(Number)
@@ -121,7 +117,11 @@ export default function BookingPage() {
 
   useEffect(() => {
     setCalendarError(null)
-    loadUnavailableSlots(id)
+    fetch(`/api/bookings?listingId=${id}`, { headers: authHeaders() })
+      .then(res => {
+        if (!res.ok) throw new Error(`Failed to load bookings (${res.status})`)
+        return res.json()
+      })
       .then(setUnavailableSlots)
       .catch(() => setCalendarError('Calendar failed to load. Please try again.'))
   }, [id])
