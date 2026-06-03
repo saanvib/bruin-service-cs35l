@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { getSessionToken } from '@descope/react-sdk'
+import { getSessionToken, useUser } from '@descope/react-sdk'
 import CalendarPicker from '../components/CalendarPicker.jsx'
 
 function authHeaders() {
@@ -87,10 +87,27 @@ export default function BookingPage() {
   const [loadingListing, setLoadingListing] = useState(true)
   const [listingError, setListingError] = useState(null)
 
+  const { user } = useUser()
+
   const [date, setDate] = useState('')
   const [time, setTime] = useState('')
   const [customerName, setCustomerName] = useState('')
   const [customerEmail, setCustomerEmail] = useState('')
+
+  useEffect(() => {
+    if (user?.name) {
+      // Capitalize each word: "jane doe" → "Jane Doe"
+      const formatted = user.name
+        .split(' ')
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(' ')
+      setCustomerName(formatted)
+    }
+    // loginIds can contain multiple entries (e.g. Google OAuth ID, email).
+    // Find the one that is actually an email address.
+    const email = user?.loginIds?.find(id => id.includes('@')) || ''
+    if (email) setCustomerEmail(email)
+  }, [user])
 
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
@@ -361,9 +378,11 @@ export default function BookingPage() {
               type="text"
               className="form-input"
               value={customerName}
-              onChange={e => setCustomerName(e.target.value)}
-              required
-              placeholder="Jane Doe"
+              readOnly
+              style={{ background: 'var(--color-surface-soft)', color: 'var(--color-muted)', cursor: 'default' }}
+              // onChange={e => setCustomerName(e.target.value)}
+              // required
+              //placeholder="Jane Doe"
             />
           </label>
 
@@ -372,9 +391,11 @@ export default function BookingPage() {
               type="email"
               className="form-input"
               value={customerEmail}
-              onChange={e => setCustomerEmail(e.target.value)}
-              required
-              placeholder="jane@example.com"
+              readOnly
+              style={{ background: 'var(--color-surface-soft)', color: 'var(--color-muted)', cursor: 'default' }}
+              // onChange={e => setCustomerEmail(e.target.value)}
+              // required
+              // placeholder="jane@example.com"
             />
           </label>
 
