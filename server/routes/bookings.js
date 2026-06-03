@@ -129,7 +129,7 @@ router.delete('/:id', async (req, res) => {
 })
 //Provider cancels a booking on one of their listings
 router.patch('/:id/cancel-provider', async (req, res) => {
-  const providerId = req.user?.userId
+  const providerId = req.user?.token?.sub
   if (!providerId) return res.status(401).json({ error: 'Unauthorized' })
   try {
 const rows = await sql.query(
@@ -156,7 +156,7 @@ const rows = await sql.query(
   }
 })
 router.patch('/:id/reopen', async (req, res) => {
-  const providerId = req.user?.userId
+  const providerId = req.user?.token?.sub
   if (!providerId) return res.status(401).json({ error: 'Unauthorized' })
   try {
     const rows = await sql.query(
