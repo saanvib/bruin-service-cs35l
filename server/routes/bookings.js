@@ -155,32 +155,5 @@ const rows = await sql.query(
     res.status(500).json({ error: 'Failed to cancel booking' })
   }
 })
-router.patch('/:id/reopen', async (req, res) => {
-  const providerId = req.user?.token?.sub
-  if (!providerId) return res.status(401).json({ error: 'Unauthorized' })
-  try {
-    const rows = await sql.query(
-      `SELECT b.id, b.status, l.provider_id
-       FROM bookings b
-       JOIN listings l ON l.id = b.listing_id
-       WHERE b.id = $1`,
-      [req.params.id]
-    )
-    if (rows.length === 0) return res.status(404).json({ error: 'Booking not found' })
-    if (rows[0].provider_id !== providerId) return res.status(403).json({ error: 'Forbidden' })
-    if (rows[0].status !== 'cancelled') return res.status(400).json({ error: 'Booking is not cancelled' })
 
-    const updated = await sql.query(
-      `UPDATE bookings SET status = 'pending'
-       WHERE id = $1
-       RETURNING id, status`,
-      [req.params.id]
-    )
-    res.json(updated[0])
-  } catch (err) {
-    console.error('PATCH /api/bookings/:id/reopen failed:', err)
-    res.status(500).json({ error: 'Failed to reopen booking' })
-  }
-})
-	
 export default router
