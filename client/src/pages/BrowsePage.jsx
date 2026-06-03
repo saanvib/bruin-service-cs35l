@@ -306,10 +306,13 @@ export default function BrowsePage() {
 
         .browse-grid {
           display: grid;
-          grid-template-columns: repeat(2, 1fr);
+          grid-template-columns: repeat(3, 1fr);
           gap: 24px;
         }
-        .browse-card { padding: 0 !important; overflow: hidden; }
+        @media (max-width: 900px) {
+          .browse-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        .browse-card { padding: 0 !important; overflow: hidden; display: flex; flex-direction: column; }
         .browse-card__photo {
           width: 100%;
           aspect-ratio: 16 / 9;
@@ -321,7 +324,7 @@ export default function BrowsePage() {
           height: 100%;
           object-fit: cover;
         }
-        .browse-card__body { padding: 20px 24px 24px; }
+        .browse-card__body { padding: 16px 18px 20px; display: flex; flex-direction: column; flex: 1; }
         .browse-card__meta-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
         .browse-card__name {
           font-family: var(--font-serif);
@@ -335,14 +338,18 @@ export default function BrowsePage() {
           display: flex;
           align-items: center;
           gap: 10px;
-          margin: 10px 0 16px;
+          margin: 0 0 16px;
+          margin-top: auto;
+          padding-top: 16px;
           font-size: 15px;
           font-weight: 600;
           color: var(--color-heading);
         }
         .browse-card__duration { color: var(--color-muted); font-size: 14px; font-weight: 400; }
         .browse-card__rating { color: var(--color-muted); font-size: 13px; font-weight: 400; }
-        .browse-card__actions { display: flex; gap: 10px; }
+        .browse-card__actions { display: flex; gap: 8px; flex-wrap: nowrap; }
+        .browse-card__actions .btn-primary,
+        .browse-card__actions .btn-secondary { white-space: nowrap; font-size: 13px; padding: 6px 12px; }
         .browse-filter-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
         .browse-filter-secondary {
           display: flex;
