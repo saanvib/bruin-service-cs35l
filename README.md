@@ -15,7 +15,7 @@ server/   Express API + Neon database client
 
 - Node.js 20+
 - npm 10+
-- Access to the team's Vercel project (ask Saanvi to be added) — the database is a Neon Postgres instance provisioned through Vercel.
+- Access to the team's Vercel project — the database is a Neon Postgres instance provisioned through Vercel.
 
 ## First-time setup
 
