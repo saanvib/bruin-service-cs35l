@@ -24,6 +24,7 @@ export default function HomePage() {
   // shared bookings state
   const [bookings, setBookings] = useState([])
   const [loadingBookings, setLoadingBookings] = useState(true)
+  const [cancellingId, setCancellingId] = useState(null)
 
   // provider-only bio state
   const [bio, setBio] = useState('')
@@ -79,7 +80,24 @@ export default function HomePage() {
     }
   }
 
-  // shared header 
+  async function handleCancelBooking(id) {
+    if (!window.confirm('Cancel this booking?')) return
+    setCancellingId(id)
+    try {
+      const res = await fetch(`/api/bookings/${id}`, { method: 'DELETE', headers: authHeaders() })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || 'Cancel failed')
+      }
+      setBookings(prev => prev.filter(b => b.id !== id))
+    } catch (e) {
+      alert(e.message)
+    } finally {
+      setCancellingId(null)
+    }
+  }
+
+  // ── shared header ────────────────────────────────────────────────────────
   const header = (
     <>
       <p style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 500,
@@ -109,12 +127,20 @@ export default function HomePage() {
               {formatDate(b.date)} · {b.time}
             </p>
           </div>
-          <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 500, padding: '3px 10px',
-            borderRadius: 'var(--radius-pill)',
-            background: b.status === 'confirmed' ? '#d1fae5' : 'var(--color-surface-soft)',
-            color: b.status === 'confirmed' ? 'var(--color-success)' : 'var(--color-muted)' }}>
-            {b.status}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 500, padding: '3px 10px',
+              borderRadius: 'var(--radius-pill)',
+              background: b.status === 'confirmed' ? '#d1fae5' : 'var(--color-surface-soft)',
+              color: b.status === 'confirmed' ? 'var(--color-success)' : 'var(--color-muted)' }}>
+              {b.status}
+            </span>
+            {isCustomer && (
+              <button onClick={() => handleCancelBooking(b.id)} disabled={cancellingId === b.id}
+                className="btn-danger" style={{ height: 32, padding: '0 14px', fontSize: 13 }}>
+                {cancellingId === b.id ? 'Cancelling…' : 'Cancel'}
+              </button>
+            )}
+          </div>
         </div>
       ))}
     </div>

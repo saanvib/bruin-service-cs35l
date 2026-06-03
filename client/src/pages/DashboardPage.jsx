@@ -187,26 +187,6 @@ export default function DashboardPage() {
     }
   }
 
-  async function handleReopen(bookingId) {
-    if (!window.confirm('Reopen this booking slot?')) return
-    setBookingAction(bookingId)
-    try {
-      const res = await fetch(`/api/bookings/${bookingId}/reopen`, {
-        method: 'PATCH',
-        headers: authHeaders(),
-      })
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err.error || 'Failed to reopen')
-      }
-      await fetchBookings()
-    } catch (e) {
-      alert(e.message)
-    } finally {
-      setBookingAction(null)
-    }
-  }
-
   // ── render ─────────────────────────────────────────────────────────────────
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '2rem 1rem' }}>
@@ -498,13 +478,9 @@ export default function DashboardPage() {
               <p style={{ margin: 0, color: '#888', fontSize: '0.85rem' }}>{b.customerEmail}</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginLeft: '1rem' }}>
-              {b.status !== 'cancelled' ? (
+              {b.status !== 'cancelled' && (
                 <button onClick={() => handleProviderCancel(b.id)} disabled={bookingAction === b.id} style={styles.btnDanger}>
                   {bookingAction === b.id ? 'Cancelling…' : 'Cancel'}
-                </button>
-              ) : (
-                <button onClick={() => handleReopen(b.id)} disabled={bookingAction === b.id} style={styles.btnSecondary}>
-                  {bookingAction === b.id ? 'Reopening…' : 'Reopen slot'}
                 </button>
               )}
             </div>
