@@ -110,13 +110,15 @@ router.post('/', async (req, res) => {
 })
 
 router.delete('/:id', async (req, res) => {
+  const email = req.user?.token?.email
+  if (!email) return res.status(401).json({ error: 'Unauthorized' })
   try {
     const rows = await sql.query(
       `UPDATE bookings
          SET status = 'cancelled'
-       WHERE id = $1 AND status <> 'cancelled'
+       WHERE id = $1 AND customer_email = $2 AND status <> 'cancelled'
        RETURNING id, status`,
-      [req.params.id]
+      [req.params.id, email]
     )
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Booking not found or already cancelled' })
