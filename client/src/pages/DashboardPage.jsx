@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { getSessionToken } from '@descope/react-sdk'
 
-const API = 'http://localhost:3001/api/dashboard'
+import { CATEGORIES } from '../constants/categories'
 
-const CATEGORIES = ['Music', 'Tutoring', 'Career', 'Fitness', 'Art', 'Technology', 'Other']
+const API = 'http://localhost:3001/api/dashboard'
 
 function authHeaders() {
   return {
