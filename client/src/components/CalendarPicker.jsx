@@ -32,24 +32,36 @@ function formatDate(day) {
   return `${yyyy}-${mm}-${dd}`
 }
 
-// Returns the CSS class names for a given day cell
+// Returns the CSS class names for a given day cell.
+// A day can have multiple classes (e.g. "today fully-booked") so we
+// build them independently rather than using a single else-if chain.
 function getDayClassName(day, today, oneMonthOut, selectedDate, fullyBookedDates, unavailableDates) {
   if (!day) return 'calendar-day empty'
 
   const classes = ['calendar-day']
+  const dateStr = formatDate(day)
+  const isToday = day.getTime() === today.getTime()
 
   if (day < today) {
+    // Past dates: greyed out, not clickable
     classes.push('past')
-  } else if (selectedDate === formatDate(day)) {
+  } else if (selectedDate === dateStr) {
+    // Selected date: blue fill (always takes priority over today ring)
     classes.push('selected')
-  } else if (day.getTime() === today.getTime()) {
-    classes.push('today')
+    if (isToday) classes.push('today')
   } else if (day > oneMonthOut) {
+    // Too far out: greyed out
     classes.push('beyond')
-  } else if (fullyBookedDates.includes(formatDate(day))) {
-    classes.push('fully-booked')
-  } else if (unavailableDates.includes(formatDate(day))) {
-    classes.push('unavailable')
+  } else {
+    // For everything in the bookable range, check today first so we
+    // can always show the ring, then layer availability on top.
+    if (isToday) classes.push('today')
+
+    if (fullyBookedDates.includes(dateStr)) {
+      classes.push('fully-booked')
+    } else if (unavailableDates.includes(dateStr)) {
+      classes.push('unavailable')
+    }
   }
 
   return classes.join(' ')

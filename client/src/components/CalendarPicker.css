@@ -107,6 +107,12 @@
   color: var(--color-blue);
 }
 
+.calendar-day.today.unavailable,
+.calendar-day.today.fully-booked {
+  color: var(--color-hairline);
+  cursor: pointer; 
+}
+
 .calendar-day.beyond {
   color: var(--color-hairline);
   cursor: default;
