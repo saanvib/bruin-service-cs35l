@@ -10,7 +10,7 @@ export default function Navbar() {
 
   return (
     <nav className="navbar">
-      <h1 className="nav-logo">BruinServices</h1>
+      <Link to="/"><h1 className="nav-logo">BruinServices</h1></Link>
 
       <div className="nav-links">
         <Link to="/">Home</Link>

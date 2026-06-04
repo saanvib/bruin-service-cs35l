@@ -9,6 +9,12 @@ function authHeaders() {
 
 const TIME_SLOTS = ["00:00","01:00","02:00","03:00","04:00","05:00","06:00","07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00"]
 
+function toStandardTime(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number)
+  const period = h >= 12 ? 'PM' : 'AM'
+  const hour = h % 12 || 12
+  return `${hour}:${String(m).padStart(2, '0')} ${period}`
+}
 
 
 function toMinutes(hhmm) {
@@ -200,7 +206,7 @@ export default function BookingPage() {
       ['Booking ID', booking.id],
       ['Service',    listing.name],
       ['Date',       booking.date],
-      ['Time',       booking.time],
+      ['Time', toStandardTime(booking.time)],
       ['Name',       booking.customerName],
       ['Email',      booking.customerEmail],
       ['Price',      `$${listing.price}`],
@@ -372,7 +378,7 @@ export default function BookingPage() {
                   const endHH = String(Math.floor(endMinutes / 60)).padStart(2, '0')
                   const endMM = String(endMinutes % 60).padStart(2, '0')
                   return (
-                    <option key={t} value={t}>{t} – {endHH}:{endMM}</option>
+                    <option key={t} value={t}>{toStandardTime(t)} – {toStandardTime(`${endHH}:${endMM}`)}</option>
                   )
                 })}
               </select>
