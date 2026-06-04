@@ -276,13 +276,19 @@ export default function BookingPage() {
     const blockedForDate = [...unavailableSlots, ...sessionBookings]
       .filter(s => s.date === d)
       .map(s => ({ start: toMinutes(s.time), end: toMinutes(s.time) + duration }))
-    return TIME_SLOTS.filter(t => {
+
+    // Use the provider's specific offered slots for this date if set,
+    // otherwise fall back to all TIME_SLOTS — must match offeredTimesForDate logic
+    const offeredTimes = (providerSlotsByDate[d] && providerSlotsByDate[d].length > 0)
+      ? providerSlotsByDate[d]
+      : TIME_SLOTS
+
+    return offeredTimes.filter(t => {
       const start = toMinutes(t)
       const end = start + duration
       return !blockedForDate.some(b => overlaps(start, end, b.start, b.end))
     })
   }
-
   const allBlockedDates = [...new Set([...unavailableSlots, ...sessionBookings].map(s => s.date))]
   const fullyBookedDates = allBlockedDates.filter(d => getSlotsForDate(d).length === 0)
 
