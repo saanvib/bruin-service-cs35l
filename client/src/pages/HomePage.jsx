@@ -15,6 +15,13 @@ function formatDate(dateStr) {
     weekday: 'short', month: 'short', day: 'numeric'
   })
 }
+function toStandardTime(hhmm) {
+  if (!hhmm) return ''
+  const [h, m] = hhmm.split(':').map(Number)
+  const period = h >= 12 ? 'PM' : 'AM'
+  const hour = h % 12 || 12
+  return `${hour}:${String(m).padStart(2, '0')} ${period}`
+}
 
 export default function HomePage() {
   const { isProvider, isCustomer } = useRole()
@@ -124,7 +131,7 @@ export default function HomePage() {
               {b.listingName || b.listingId || b.listing_id}
             </p>
             <p style={{ margin: '3px 0 0', fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--color-muted)' }}>
-              {formatDate(b.date)} · {b.time}
+              {formatDate(b.date)} · {toStandardTime(b.time)}
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

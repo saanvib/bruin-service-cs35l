@@ -10,7 +10,7 @@ export default function Navbar() {
 
   return (
     <nav className="navbar">
-      <Link to="/"><h1 className="nav-logo">BruinServices</h1></Link>
+      <Link to="/" style={{ textDecoration: 'none' }}><h1 className="nav-logo">BruinServices</h1></Link>
 
       <div className="nav-links">
         <Link to="/">Home</Link>
