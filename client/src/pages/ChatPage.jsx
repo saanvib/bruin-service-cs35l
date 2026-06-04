@@ -178,7 +178,7 @@ export default function ChatPage() {
         {!activeId ? (
           // Placeholder when nothing is selected
           <div className="chat-main__placeholder">
-            <span className="chat-main__placeholder-icon">💬</span>
+            <span className="chat-main__placeholder-icon"></span>
             <p>Select a conversation to start chatting</p>
           </div>
         ) : (
