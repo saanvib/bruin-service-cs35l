@@ -169,7 +169,7 @@ export default function ListingDetailPage() {
           )}
         </div>
         <h1 className="section-heading">{listing.name}</h1>
-        <p className="listing-header__location">📍 {listing.location}</p>
+        <p className="listing-header__location">{listing.location}</p>
         <p className="listing-header__desc">{listing.description}</p>
         <div className="listing-header__book-row">
           <span className="listing-header__price">${listing.price} · {listing.duration} min</span>
@@ -179,14 +179,14 @@ export default function ListingDetailPage() {
             onClick={handleMessageProvider}
             disabled={messaging}
           >
-            {messaging ? 'Opening...' : '💬 Message Provider'}
+            {messaging ? 'Opening...' : 'Message Provider'}
           </button>
           <button
             className="btn-secondary"
             onClick={handleFlag}
             disabled={flagging || flagged}
           >
-            {flagged ? '🚩 Reported' : flagging ? 'Reporting...' : '🚩 Report'}
+            {flagged ? 'Reported' : flagging ? 'Reporting...' : 'Report'}
           </button>
         </div>
       </div>
