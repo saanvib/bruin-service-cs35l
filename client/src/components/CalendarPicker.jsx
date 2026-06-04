@@ -108,10 +108,8 @@ export default function CalendarPicker({ selectedDate, onSelectDate, fullyBooked
       return
     }
 
-    if (fullyBookedDates.includes(formatDate(day))) {
-      setOutOfRangeMsg('There are no available appointments on this day. Please select another date.')
-      return
-    }
+    // Fully booked days are silently unclickable — no error message shown
+    if (fullyBookedDates.includes(formatDate(day))) return
 
     setOutOfRangeMsg('')
     onSelectDate(formatDate(day))

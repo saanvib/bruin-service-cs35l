@@ -88,7 +88,7 @@
   color: var(--color-ink);
 }
 
-.calendar-day:not(.past):not(.empty):not(.beyond):not(.unavailable):not(.selected):hover {
+.calendar-day:not(.past):not(.empty):not(.beyond):not(.selected):hover {
   background: var(--color-surface-soft);
 }
 
@@ -107,11 +107,9 @@
   color: var(--color-muted);
 }
 
-
 .calendar-day.today.unavailable,
 .calendar-day.today.fully-booked {
   color: var(--color-hairline);
-  cursor: pointer; 
 }
 
 .calendar-day.beyond {
@@ -131,8 +129,8 @@
 }
 
 .calendar-day.fully-booked {
-  background-color: #fee2e2;
-  color: #991b1b;
+  color: var(--color-hairline);
+  cursor: default;
 }
 
 /* ── Out-of-range message ── */
