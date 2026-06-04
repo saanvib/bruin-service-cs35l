@@ -65,6 +65,7 @@ export default function BrowsePage() {
   const [minRating, setMinRating] = useState("");
   const [showTop, setShowTop] = useState(false);
   const [favorites, setFavorites] = useState(getFavorites);
+  const [bookedIds, setBookedIds] = useState(new Set());
 
 
   const fetchListings = (overrides = {}) => {
@@ -105,10 +106,13 @@ export default function BrowsePage() {
   }, []);
 
   useEffect(() => {
-    const onScroll = () => setShowTop(window.scrollY > 300);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  const token = localStorage.getItem('DSR') || getSessionToken();
+  if (!token) return;
+  fetch('http://localhost:3001/api/bookings/mine', { headers: { Authorization: `Bearer ${token}` } })
+    .then(res => res.ok ? res.json() : [])
+    .then(data => setBookedIds(new Set(data.map(b => String(b.listingId)))))
+    .catch(() => {});
+}, []);
 
   const filtered = listings.filter(l => {
     const q = search.toLowerCase();
@@ -277,13 +281,30 @@ export default function BrowsePage() {
           {filtered.map(listing => (
             <div
               key={listing.id}
-              className={`card browse-card${isNew(listing) ? ' browse-card--new' : ''}`}
-            >
-              <div className="browse-card__photo">
-                {listing.photos?.[0] && (
-                  <img src={listing.photos[0]} alt={listing.name} />
-                )}
-              </div>
+                className={`card browse-card${isNew(listing) ? ' browse-card--new' : ''}`}            >
+              <div className="browse-card__photo" style={{ position: 'relative' }}>
+  {listing.photos?.[0] && (
+    <img src={listing.photos[0]} alt={listing.name} />
+  )}
+  {bookedIds.has(String(listing.id)) && (
+    <div style={{
+      position: 'absolute',
+      top: 10,
+      right: 10,
+      background: 'var(--color-blue)',
+      color: '#fff',
+      borderRadius: '50%',
+      width: 32,
+      height: 32,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: 18,
+      fontWeight: 700,
+      boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+    }}>✓</div>
+  )}
+</div>
               <div className="browse-card__body">
                 <div className="browse-card__meta-row">
                   <span className="badge-pill">{listing.category}</span>
