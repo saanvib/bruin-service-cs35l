@@ -1,0 +1,1 @@
+ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS name text NOT NULL DEFAULT '';
