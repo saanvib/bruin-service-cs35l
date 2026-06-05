@@ -10,7 +10,7 @@ import ProviderProfilePage from './pages/ProviderProfilePage'
 import DashboardPage from './pages/DashboardPage'
 import BookingPage from './pages/BookingPage'
 import ChatPage from './pages/ChatPage'
-import NotificationsPage from './pages/NotificationsPage'
+//import NotificationsPage from './pages/NotificationsPage'
 import SavedListingsPage from './pages/SavedListingPage'
 import './App.css';
 
@@ -38,7 +38,6 @@ const router = createBrowserRouter([
           { path: 'listings/:id',  element: <ListingDetailPage /> },
           { path: 'providers/:id', element: <ProviderProfilePage /> },
           { path: 'chat',          element: <ChatPage /> },
-          { path: 'notifications', element: <NotificationsPage /> },
           {
             element: <RequireRole role="customer" />,
             children: [
