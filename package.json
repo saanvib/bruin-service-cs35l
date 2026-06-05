@@ -9,10 +9,15 @@
   "scripts": {
     "dev": "concurrently \"npm run dev --workspace=client\" \"npm run dev --workspace=server\"",
     "dev:client": "npm run dev --workspace=client",
-    "dev:server": "npm run dev --workspace=server"
+    "dev:server": "npm run dev --workspace=server",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "@descope/node-sdk": "^2.6.0",
+    "@playwright/test": "^1.60.0",
+    "concurrently": "^9.2.1",
+    "dotenv": "^17.4.2"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0"

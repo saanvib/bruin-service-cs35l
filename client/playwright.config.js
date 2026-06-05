@@ -8,6 +8,7 @@ export default defineConfig({
   webServer: {
     command: 'VITE_TEST_MODE=true npm run dev',
     url: 'http://localhost:5173',
-    reuseExistingServer: false,
+    reuseExistingServer: true,
+    //timeout: 30000, //
   },
 })

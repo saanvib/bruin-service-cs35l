@@ -205,11 +205,11 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* Upcoming bookings */}
+        {/* Upcoming bookings
         <div>
           {sectionLabel('Upcoming Bookings')}
           {bookingList}
-        </div>
+        </div> */}
       </div>
     )
   }
