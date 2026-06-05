@@ -1,0 +1,7 @@
+
+Running 2 tests using 2 workers
+
+  ✓  2 tests/client-review.spec.js:33:1 › client can browse listings, view a listing, and submit a review (625ms)
+  ✓  1 tests/provider-dashboard.spec.js:3:1 › provider can create a new listing and see it on the dashboard (637ms)
+
+  2 passed (2.0s)
