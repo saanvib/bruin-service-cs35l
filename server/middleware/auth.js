@@ -9,7 +9,8 @@ export async function requireAuth(req, res, next) {
     const authInfo = await descopeClient.validateSession(token)
     req.user = authInfo
     next()
-  } catch {
+  } catch (err) {
+    console.error('requireAuth failed:', err.message)
     res.status(401).json({ error: 'Invalid token' })
   }
 }

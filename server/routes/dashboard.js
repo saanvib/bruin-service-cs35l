@@ -22,14 +22,14 @@ router.get('/listings', async (req, res) => {
 // POST /api/dashboard/listings
 router.post('/listings', async (req, res) => {
   const providerId = req.user.token.sub
-  const { name, category, location, description, price, duration, services } = req.body
+  const { name, category, location, description, price, duration, services, availableDates, photos } = req.body
   if (!name || !category || !location || !description || price == null || !duration) {
     return res.status(400).json({ error: 'Missing required fields' })
   }
   try {
     const id = Date.now().toString()
     const [listing] = await sql`
-      INSERT INTO listings (id, provider_id, name, category, location, description, price, duration, services)
+      INSERT INTO listings (id, provider_id, name, category, location, description, price, duration, services, available_dates, photos)
       VALUES (
         ${id},
         ${providerId},
@@ -39,7 +39,9 @@ router.post('/listings', async (req, res) => {
         ${description},
         ${Number(price)},
         ${Number(duration)},
-        ${JSON.stringify(services || [])}::jsonb
+        ${JSON.stringify(services || [])}::jsonb,
+        ${JSON.stringify(availableDates || [])}::jsonb,
+        ${JSON.stringify(photos || [])}::jsonb
       )
       RETURNING *
     `

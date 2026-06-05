@@ -122,9 +122,12 @@ export default function DashboardPage() {
         headers: authHeaders(),
         body: JSON.stringify({ ...form }),
       })
-      if (!res.ok) throw new Error('Failed to create listing')
-      await fetchListings()
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error || `Failed to create listing (${res.status})`)
+      }
       closeModal()
+      await fetchListings()
     } catch (e) {
       alert(e.message)
     } finally {
@@ -142,9 +145,12 @@ export default function DashboardPage() {
         headers: authHeaders(),
         body: JSON.stringify({ ...form }),
       })
-      if (!res.ok) throw new Error('Failed to update listing')
-      await fetchListings()
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error || `Failed to update listing (${res.status})`)
+      }
       closeModal()
+      await fetchListings()
     } catch (e) {
       alert(e.message)
     } finally {
