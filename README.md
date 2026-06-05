@@ -154,7 +154,7 @@ Most API routes require a valid session; `/api/dashboard/*` additionally require
 \* `/api/chat` is mounted without the global `requireAuth` guard; check the route file
 before relying on its auth behavior.
 
-## Tests (Playwright)
+## End-to-End Tests (Playwright)
 
 End-to-end tests live in `client/tests/` and use Playwright. There is no `npm test`
 script yet; run them from the `client/` workspace:
@@ -165,14 +165,15 @@ npx playwright install     # first time only, installs browsers
 npx playwright test
 ```
 
-The test setup (`client/tests/auth/global-setup.js`) creates a temporary Descope test
-user and logs it in, so it needs a **`DESCOPE_MANAGEMENT_KEY`** in addition to the
-project ID. This is a secret and comes through `vercel env pull` along with the other
-variables, so if you completed the setup above you already have it — never commit it.
+**Key locations:**
+- Test specs → `client/tests/*.spec.js`
+- Auth setup → `client/tests/auth/global-setup.js`
+- Playwright config → `client/playwright.config.js`
 
-Playwright starts its own dev server with `VITE_TEST_MODE=true` (see
-`client/playwright.config.js`).
-
+The test setup creates a temporary Descope test user and logs it in, so it needs a
+**`DESCOPE_MANAGEMENT_KEY`** in addition to the project ID. Pull all required vars via
+`vercel env pull .env.development.local` — never commit that file.
+Playwright starts its own dev server with `VITE_TEST_MODE=true`.
 ## Adding a new migration
 
 1. Create a new file in `server/migrations/` with the next number, e.g.
