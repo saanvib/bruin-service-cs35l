@@ -1,3 +1,5 @@
+//client test
+
 import { test, expect } from '@playwright/test';
 
 // Pre-built customer JWT — RequireAuth + RequireRole both short-circuit
