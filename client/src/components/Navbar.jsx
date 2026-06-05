@@ -18,7 +18,6 @@ export default function Navbar() {
         {isProvider && <Link to="/dashboard">Dashboard</Link>}
         {isCustomer && <Link to="/favorites">Saved</Link>}
         <Link to="/chat">Chat</Link>
-        <Link to="/notifications">Notifications</Link>
         {isAuthenticated
           ? <button onClick={() => logout()} className="nav-logout">Logout</button>
           : <Link to="/login" className="nav-login">Login</Link>
