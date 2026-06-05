@@ -35,8 +35,10 @@ export default function SavedListingsPage() {
             <h2>{listing.name}</h2>
             <p>{listing.description}</p>
             <p>${listing.price} — {listing.duration} min</p>
-            <Link to={`/listings/${listing.id}`}>View Details</Link>
-            <Link to={`/bookings/${listing.id}`} style={{ marginLeft: "8px" }}>Book</Link>
+            <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+              <Link to={`/listings/${listing.id}`} className="btn-secondary">View Details</Link>
+              <Link to={`/bookings/${listing.id}`} className="btn-primary">Book Now</Link>
+            </div>
           </div>
         ))
       )}
