@@ -1,4 +1,4 @@
-# Bruin Service
+# BruinServices
 
 UCLA CS35L group project — a marketplace where UCLA students can list and book services from one another. Vite + React frontend, Express API server, Neon Postgres database, Descope for authentication.
 
